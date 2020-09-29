@@ -19,6 +19,10 @@ const LULDOLLAR_EMOJI_ID = constants[constants.env].discord_ids.luldollar_emoji_
 
 const GAME_CHECK_INTERVAL = 1000 * 60 * 5; // 5 minutes
 
+let galleries = {
+  arkham: false
+};
+
 function login(token) {
   client.login(token);
 
@@ -93,19 +97,29 @@ function registerEvents() {
 async function handleGalleryReaction(messageReaction, user) {
   const galleryType = messageReaction.message.content.split(':')[1];
 
+  let prevOrNext = (messageReaction.emoji.name === '◀️' ? -1 : 1);
+
   if (galleryType === 'Arkham') {
-    handleArkhamGalleryReaction(messageReaction, user);
+    handleArkhamGalleryReaction(messageReaction, user, prevOrNext);
   }
 }
 
-async function handleArkhamGalleryReaction(messageReaction, user) {
+async function handleArkhamGalleryReaction(messageReaction, user, prevOrNext) {
+  if (galleries.arkham) {
+    console.log('rate limit');
+    return;
+  }
+
+  galleries.arkham = true;
+  setTimeout(() => {
+    galleries.arkham = false;
+  }, 3000);
+
   const oldCardId = messageReaction.message.content.split(':')[3];
   const deckId = messageReaction.message.content.split(':')[2];
   const deck = await ArkhamResources.getDeck(deckId);
 
   const cardIds = Object.keys(deck.slots);
-
-  let prevOrNext = (messageReaction.emoji.name === '◀️' ? -1 : 1);
 
   let currentCardIndex = cardIds.findIndex((id) => {return id === oldCardId});
   let cardId = cardIds[(currentCardIndex + prevOrNext + cardIds.length) % cardIds.length];

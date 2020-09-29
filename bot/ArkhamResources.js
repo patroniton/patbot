@@ -33,7 +33,7 @@ function createEmbedForDeck(deck, cardId) {
   .setURL(`https://arkhamdb.com/deck/view/${deck.id}`)
   .setDescription(card.text)
   .addField('# in deck', deck.slots[cardId], true)
-  .setImage(`https://arkhamdb.com/bundles/cards/${cardId}.jpg`);
+  .setImage(`https://arkhamdb.com/${card.imagesrc}`);
 
   return embed;
 }
