@@ -130,12 +130,16 @@ async function handleArkhamGalleryReaction(messageReaction, user, prevOrNext) {
   messageReaction.message.edit(code, embed);
 }
 
+// TODO: refactor this janky fucky mess
 async function checkForGameUpdates() {
   if (isBedtime()) {
     return;
   }
 
   const games = await DatabaseResources.getPlayableGames();
+
+  // TODO: should batch the games in sets of 10 or something
+  // eg. do 10 game updates, then wait 1 minute, then do next 10, etc.
 
   for (let game of games) {
     const usersToNotify = await DatabaseResources.getUsersSubscribedToGame(game.id);
@@ -149,6 +153,11 @@ async function checkForGameUpdates() {
 
     // get all updates from rss & isolate IDs
     const updates = rss.channel[0].item;
+
+    if (!updates) {
+      continue;
+    }
+
     const updateIds = updates.map((update) => {
       return update.link[0].split('/').slice(-1)[0];
     });
