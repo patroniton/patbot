@@ -79,11 +79,11 @@ function registerEvents() {
     let shouldReply = false;
 
     for (let user of message.mentions.users) {
-      if (user.shift() === client.user.id) {
+      if (user[0] === pat.d_user_id) {
         return;
       }
 
-      if (user.shift() === pat.d_user_id) {
+      if (user[0] === client.user.id) {
         shouldReply = true;
       }
     }
