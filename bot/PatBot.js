@@ -106,14 +106,14 @@ async function handleGalleryReaction(messageReaction, user) {
 
 async function handleArkhamGalleryReaction(messageReaction, user, prevOrNext) {
   if (galleries.arkham) {
-    console.log('rate limit');
+    console.log(`${user.id} rate limiting Arkham deck`);
     return;
   }
 
   galleries.arkham = true;
   setTimeout(() => {
     galleries.arkham = false;
-  }, 3000);
+  }, 1000);
 
   const oldCardId = messageReaction.message.content.split(':')[3];
   const deckId = messageReaction.message.content.split(':')[2];
