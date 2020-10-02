@@ -5,7 +5,7 @@
   "main": "app.js",
   "dependencies": {
     "discord.js": "^12.3.1",
-    "discord.js-commando": "git+https://github.com/discordjs/commando.git",
+    "discord.js-commando": "github:discordjs/Commando",
     "jsdom": "^16.4.0",
     "moment": "^2.29.0",
     "mysql": "^2.18.1",

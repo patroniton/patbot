@@ -16,11 +16,16 @@ module.exports = class Add extends Commando.Command {
 
   async run(message, args) {
     try {
-      const steamGameId = args.shift();
-      const name = args.join(' ');
+      if (message.author.id === PAT_USER_ID) {
+        const steamGameId = args.shift();
+        const name = args.join(' ');
+  
+        DatabaseResources.insertGame(steamGameId, name);
+        message.reply(`Added ${name} to the game list!`);
+      } else {
+        message.reply(`Disabled for non-admins because of some abuse of the command`)
+      }
 
-      DatabaseResources.insertGame(steamGameId, name);
-      message.reply(`Added ${name} to the game list!`);
     } catch (e) {
       console.log(e);
       message.reply('Sorry, something went wrong.');

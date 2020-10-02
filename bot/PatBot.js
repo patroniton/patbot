@@ -4,7 +4,6 @@ const token = require('./../token.js');
 const SteamResources = require('./SteamResources.js');
 const DatabaseResources = require('./DatabaseResources.js');
 const ArkhamResources = require('./ArkhamResources.js');
-const Discord = require('discord.js');
 
 const Commando = require('discord.js-commando');
 const client = new Commando.CommandoClient({
@@ -19,14 +18,24 @@ const LULDOLLAR_EMOJI_ID = constants[constants.env].discord_ids.luldollar_emoji_
 
 const GAME_CHECK_INTERVAL = 1000 * 60 * 5; // 5 minutes
 
-let galleries = {
+let activeGalleries = {
   arkham: false
 };
+
+
+function init() {
+  // this is to solve needing data persisted through the bot (but without using a database)
+  // should find a way around this if possible, but works for now
+  client.patbot = {};
+  client.patbot.startTime = moment();
+
+  registerEvents();
+}
 
 function login(token) {
   client.login(token);
 
-  registerEvents();
+  init();
 }
 
 function registerEvents() {
@@ -34,10 +43,23 @@ function registerEvents() {
     console.log(`Logged in as ${client.user.tag}!`);
 
     client.registry
+      .registerDefaultTypes()
+      .registerDefaultGroups()
+      .registerDefaultCommands({
+        help: true,
+        ping: false,
+        prefix: false,
+        eval: false,
+        unknownCommand: false,
+        commandState: false
+      })
       .registerGroups([
         ['luldollar', 'luldollar commands'],
         ['steam_game_updates', 'steam game update commands'],
         ['arkham', 'Arkham related commands'],
+        ['games', 'Text games to play'],
+        ['util', 'Utility commands'],
+        ['misc', 'Other commands'],
       ])
       .registerCommandsIn(path.join(__dirname, 'cmds'));
 
@@ -105,14 +127,14 @@ async function handleGalleryReaction(messageReaction, user) {
 }
 
 async function handleArkhamGalleryReaction(messageReaction, user, prevOrNext) {
-  if (galleries.arkham) {
+  if (activeGalleries.arkham) {
     console.log(`${user.id} rate limiting Arkham deck`);
     return;
   }
 
-  galleries.arkham = true;
+  activeGalleries.arkham = true;
   setTimeout(() => {
-    galleries.arkham = false;
+    activeGalleries.arkham = false;
   }, 1000);
 
   const oldCardId = messageReaction.message.content.split(':')[3];
@@ -123,8 +145,8 @@ async function handleArkhamGalleryReaction(messageReaction, user, prevOrNext) {
 
   let currentCardIndex = cardIds.findIndex((id) => {return id === oldCardId});
   let cardId = cardIds[(currentCardIndex + prevOrNext + cardIds.length) % cardIds.length];
-  const code = ArkhamResources.getEmbedGalleryCode(deckId, cardId);
 
+  const code = ArkhamResources.getEmbedGalleryCode(deckId, cardId);
   const embed = ArkhamResources.createEmbedForDeck(deck, cardId);
 
   messageReaction.message.edit(code, embed);
