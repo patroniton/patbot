@@ -1,5 +1,6 @@
 const mysql = require('promise-mysql');
 const constants = require('./../env');
+const moment = require('moment');
 const env = 'dev';
 const dbConnection = constants[env].database;
 const DB_NAME = 'patbot';
@@ -10,6 +11,7 @@ const USER_GAME_SUBSCRIPTION_TABLE = 'user_game_subscription';
 const USER_TABLE = 'user';
 const LULDOLLAR_TABLE = 'luldollar';
 const NICKNAME_TABLE = 'user_nickname';
+const AVAILABILITY_TABLE = 'user_availability';
 
 async function getLuldollars() {
   return await wrapTransaction(async (db) => {
@@ -101,6 +103,27 @@ async function getNicknames() {
   });
 }
 
+async function insertAvailability(userId, discordMessageId, start, end, percentage = 100, isPresent = 1) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`INSERT INTO ${AVAILABILITY_TABLE} (user_id, d_message_id, start, end, percentage, is_present) VALUES (${db.escape(userId)}, ${db.escape(discordMessageId)}, ${db.escape(start)}, ${db.escape(end)}, ${db.escape(percentage)}, ${db.escape(isPresent)})`);
+  });
+}
+
+async function getFutureAvailabilities(options) {
+  if (options === 'all') {
+    return await getAllFutureAvailabilities();
+  }
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' AND end <= '${moment().add(3, 'day').format('YYYY-MM-DD')}' ORDER BY start`);
+  });
+}
+
+async function getAllFutureAvailabilities() {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' ORDER BY start`);
+  });
+}
+
 async function wrapTransaction(callback) {
   const db = await mysql.createConnection(dbConnection);
 
@@ -134,5 +157,7 @@ module.exports = {
   getGameUpdates: getGameUpdates,
   insertGameUpdate: insertGameUpdate,
   getNicknames: getNicknames,
-  getUserById: getUserById
+  getUserById: getUserById,
+  insertAvailability: insertAvailability,
+  getFutureAvailabilities: getFutureAvailabilities,
 };
