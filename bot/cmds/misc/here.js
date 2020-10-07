@@ -16,71 +16,85 @@ module.exports = class Here extends Commando.Command {
   async run(message, args) {
     try {
       const user = await DatabaseResources.getUser(message.author.id);
-      const dayKeywords = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'u', 'm', 't', 'w', 'r', 'f', 's', 'tonight', 'tn', '2nite', '2night', 'tomorrow', 'tmr', 'tmrw'];
+      const dayWords = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'u', 'm', 't', 'w', 'r', 'f', 's', 'tonight', 'tn', '2nite', '2night', 'tomorrow', 'tmr', 'tmrw'];
       const modifiers = [
         'next', // !here next friday, !here next Wednesday
         // 'until', // !here until tomorrow, !here until Saturday
         // 'this', // !here this friday, !here this week // actually not sure if this does anything
         // 'to', // !here thursday to saturday, !here tonight to tomorrow
-        // 'and', // !here thursday and friday, !here friday and sunday // if and found terminate early and just set end to the start date and then treat this as a new argument
       ];
 
-      
-      let availabilityWords = args.toLowerCase().split(' ');
+      const groupOfWords = args.toLowerCase().split(',');
+      let dates = [];
+      let start = moment().startOf('day');
+      let end = moment().startOf('day');
       let percentage = 100;
-      let startDateFound = false;
 
-      let start = moment();
-      let end = moment();
+      for(let wordGroup of groupOfWords) {
+        let startDateFound = false;
+        let endDateFound = false;
+        start = moment().startOf('day');
+        end = moment().startOf('day');
+        percentage = 100;
 
-      // eg. !here thursday to friday, sunday to next wednesday
+        const words = wordGroup.split(' ');
 
-      for (let availabilityWord of availabilityWords) {
-        if (availabilityWord.includes('%')) {
-          percentage = this.getPercentageFromText(availabilityWord);
-        }
-        
-        // not found in keywords - ignore word
-        if (!(dayKeywords.includes(availabilityWord) || modifiers.includes(availabilityWord))) {
-          continue;
-        }
+        for (let word of words) {
+          if (word.includes('%')) {
+            percentage = this.getPercentageFromText(word);
+            continue;
+          }
 
-        // check if word is a day
-        for (let dayKeyword of dayKeywords) {
-          if (dayKeyword === availabilityWord) {
+          // end date has been found so ignore the rest of the words in the group
+          if (endDateFound) {
+            break;
+          }
+  
+          if ((dayWords.includes(word))) {
             if (!startDateFound) {
               startDateFound = true;
-              start = this.getDayFromKeyword(dayKeyword, start);
+              start = this.getDayFromKeyword(word, start);
               continue;
             } else {
-              end = this.getDayFromKeyword(dayKeyword, end);
-              DatabaseResources.insertAvailability(user.id, message.id, start.format(dateFormat), end.format(dateFormat), percentage);
-              message.reply(`added availability for ${this.getDateDisplay(start)} ${start.diff(end, 'days') === 0 ? '' : `to ${this.getDateDisplay(end)} `}(${percentage}%)`);
-              return;
+              end = this.getDayFromKeyword(word, end);
+              endDateFound = true;
+            }
+          }
+
+          if (modifiers.includes(word)) {
+            if (!startDateFound) {
+              start = this.applyModifier(word, start);
+            } else {
+              end = this.applyModifier(word, end);
             }
           }
         }
 
-        // check if word is a modifier
-        for (let modifier of modifiers) {
-          if (modifier === availabilityWord) {
-            if (!startDateFound) {
-              start = this.applyModifier(modifier, start);
-            } else {
-              end = this.applyModifier(modifier, end);
-            }
-          }
+        if (!endDateFound) {
+          end = start.clone();
         }
+
+        dates.push({start, end, percentage});
       }
 
-      end = start;
-      DatabaseResources.insertAvailability(user.id, message.id, start.format(dateFormat), end.format(dateFormat), percentage);
-      message.reply(`added availability for ${this.getDateDisplay(start)} (${percentage}%)`);
-      return;
+      let reply = `Added availabilit${dates.length > 1 ? 'ies' : 'y'} for`;
 
-      // for when multiple arguments are supported
-      // startDateFound = false;
+      for (let date of dates) {
+        reply += ` ${this.getDateDisplay(date.start)}`;
+        
+        if (date.start.diff(date.end, 'days') > 0) {
+          reply += ` to ${this.getDateDisplay(date.end)}`;
+        }
+
+        reply += ` (${date.percentage}%),`;
+
+        DatabaseResources.insertAvailability(user.id, message.id, date.start.format(dateFormat), date.end.format(dateFormat), date.percentage);
+      }
+
+      reply = reply.slice(0, -1);
+      message.reply(reply);
     } catch (e) {
+      console.log(e);
       message.reply('Sorry, something went wrong.');
     }
   }
@@ -92,8 +106,14 @@ module.exports = class Here extends Commando.Command {
   }
 
   getDayFromKeyword(word, date) {
-    const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'u', 'm', 't', 'w', 'r', 'f', 's'];
+    const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const weekDaysShort = ['u', 'm', 't', 'w', 'r', 'f', 's'];
     let modifiedDate = date.clone();
+
+    if (weekDaysShort.includes(word)) {
+      // TODO: shouldn't change a parameter's value
+      word = weekdays[weekDaysShort.indexOf(word)];
+    }
 
     if (weekdays.includes(word)) {
       modifiedDate.day(word);
@@ -123,7 +143,7 @@ module.exports = class Here extends Commando.Command {
   getDateDisplay(date) {
     const now = moment();
 
-    if (date.isSame(now)) {
+    if (date.isSame(now, 'year') && date.isSame(now, 'month') && date.isSame(now, 'day')) {
       return 'tonight';
     } else if (date.diff(now, 'days') === 0) {
       return 'tomorrow';

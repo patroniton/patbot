@@ -14,13 +14,7 @@ module.exports = class Gamers extends Commando.Command {
 
   async run(message, args) {
     try {
-      let availabilities;
-
-      if (args === 'all') {
-        availabilities = await DatabaseResources.getFutureAvailabilities();
-      } else {
-        availabilities = await DatabaseResources.getAllFutureAvailabilities();
-      }
+      let availabilities = await DatabaseResources.getFutureAvailabilities(args);
 
       if (availabilities.length === 0) {
         message.reply('No one has set any availabilities');
@@ -29,14 +23,24 @@ module.exports = class Gamers extends Commando.Command {
 
       let currentDisplayedDate = null;
       let reply = '';
+      let gamersForDay = [];
 
       for (let availability of availabilities) {
-        if (currentDisplayedDate !== availability.start) {
-          currentDisplayedDate = this.getDateDisplay(moment(availability.start, 'YYYY-MM-DD'));
-          reply += `\n**${currentDisplayedDate}**:`;
+        availability.start = moment(availability.start);
+
+        if (!availability.start.isSame(currentDisplayedDate)) {
+          currentDisplayedDate = availability.start.clone();
+          reply += `\n\n**${this.getDateDisplay(currentDisplayedDate)}**:`;
+          gamersForDay = [];
+        }
+        
+        // already displayed for this day
+        if (gamersForDay.includes(availability.name)) {
+          continue;
         }
 
-        reply += `\n${availability.name}`;
+        gamersForDay.push(availability.name);
+        reply += `\n${availability.name} ${availability.percentage}%`;
       }
 
       message.channel.send(reply);
@@ -49,10 +53,10 @@ module.exports = class Gamers extends Commando.Command {
   getDateDisplay(date) {
     const now = moment();
 
-    if (date.isSame(now)) {
-      return 'tonight';
+    if (date.isSame(now, 'year') && date.isSame(now, 'month') && date.isSame(now, 'day')) {
+      return 'Tonight';
     } else if (date.diff(now, 'days') === 0) {
-      return 'tomorrow';
+      return 'Tomorrow';
     } else if (date.diff(now, 'days') <= 7) {
       return date.format('dddd');
     } else if (date.diff(now, 'days') >= 8 && date.diff(now, 'days') <= 15) {

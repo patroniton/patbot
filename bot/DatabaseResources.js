@@ -109,15 +109,18 @@ async function insertAvailability(userId, discordMessageId, start, end, percenta
   });
 }
 
-async function getFutureAvailabilities() {
+async function getFutureAvailabilities(options) {
+  if (options === 'all') {
+    return await getAllFutureAvailabilities();
+  }
   return await wrapTransaction(async (db) => {
-    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= ${moment().format('YYYY-MM-DD')} AND end <= ${moment().add(3, 'day').format('YYYY-MM-DD')} ORDER BY start`);
+    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' AND end <= '${moment().add(3, 'day').format('YYYY-MM-DD')}' ORDER BY start`);
   });
 }
 
 async function getAllFutureAvailabilities() {
   return await wrapTransaction(async (db) => {
-    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= ${moment().format('YYYY-MM-DD')} ORDER BY start`);
+    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' ORDER BY start`);
   });
 }
 
@@ -157,5 +160,4 @@ module.exports = {
   getUserById: getUserById,
   insertAvailability: insertAvailability,
   getFutureAvailabilities: getFutureAvailabilities,
-  getAllFutureAvailabilities: getAllFutureAvailabilities
 };
