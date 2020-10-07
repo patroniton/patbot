@@ -1,5 +1,6 @@
 const mysql = require('promise-mysql');
 const constants = require('./../env');
+const moment = require('moment');
 const env = 'dev';
 const dbConnection = constants[env].database;
 const DB_NAME = 'patbot';
@@ -108,6 +109,18 @@ async function insertAvailability(userId, discordMessageId, start, end, percenta
   });
 }
 
+async function getFutureAvailabilities() {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= ${moment().format('YYYY-MM-DD')} AND end <= ${moment().add(3, 'day').format('YYYY-MM-DD')} ORDER BY start`);
+  });
+}
+
+async function getAllFutureAvailabilities() {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= ${moment().format('YYYY-MM-DD')} ORDER BY start`);
+  });
+}
+
 async function wrapTransaction(callback) {
   const db = await mysql.createConnection(dbConnection);
 
@@ -142,5 +155,7 @@ module.exports = {
   insertGameUpdate: insertGameUpdate,
   getNicknames: getNicknames,
   getUserById: getUserById,
-  insertAvailability: insertAvailability
+  insertAvailability: insertAvailability,
+  getFutureAvailabilities: getFutureAvailabilities,
+  getAllFutureAvailabilities: getAllFutureAvailabilities
 };
