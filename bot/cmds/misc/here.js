@@ -9,7 +9,7 @@ module.exports = class Here extends Commando.Command {
       name: 'here',
       group: 'misc',
       memberName: 'here',
-      description: 'Saves availability of gamers. eg: !here tonight, !here tomorrow, !here Saturday, !here Monday - Friday'
+      description: 'Saves availability of gamers. eg: !here tonight, !here tomorrow, !here Saturday (any full weekday or single letter weekday is accepted)'
     });
   }
 
