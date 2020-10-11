@@ -114,13 +114,13 @@ async function getFutureAvailabilities(options) {
     return await getAllFutureAvailabilities();
   }
   return await wrapTransaction(async (db) => {
-    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' AND end <= '${moment().add(3, 'day').format('YYYY-MM-DD')}' ORDER BY start, created_at`);
+    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' AND end <= '${moment().add(3, 'day').format('YYYY-MM-DD')}' ORDER BY start, created_at DESC`);
   });
 }
 
 async function getAllFutureAvailabilities() {
   return await wrapTransaction(async (db) => {
-    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' ORDER BY start, created_at`);
+    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' ORDER BY start, created_at DESC`);
   });
 }
 
