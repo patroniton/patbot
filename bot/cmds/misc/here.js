@@ -92,10 +92,10 @@ module.exports = class Here extends Commando.Command {
       }
 
       reply = reply.slice(0, -1);
-      message.reply(reply);
+      message.channel.send(reply);
     } catch (e) {
       console.log(e);
-      message.reply('Sorry, something went wrong.');
+      message.channel.send('Sorry, something went wrong.');
     }
   }
 

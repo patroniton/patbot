@@ -23,16 +23,16 @@ module.exports = class UnSub extends Commando.Command {
 
         if (existingSubscription) {
           await DatabaseResources.deleteSubscription(existingSubscription.id);
-          message.reply(`You're now unsubscribed from ${game.name}`);
+          message.channel.send(`You're now unsubscribed from ${game.name}`);
         } else {
-          message.reply(`You're not subscribed to ${game.name}!`);
+          message.channel.send(`You're not subscribed to ${game.name}!`);
         }
       } else {
-        message.reply(`Couldn't find game with Steam ID of ${steamGameId}.`);
+        message.channel.send(`Couldn't find game with Steam ID of ${steamGameId}.`);
       }
     } catch (e) {
       console.log(e);
-      message.reply('Sorry, something went wrong.');
+      message.channel.send('Sorry, something went wrong.');
     }
   }
 }

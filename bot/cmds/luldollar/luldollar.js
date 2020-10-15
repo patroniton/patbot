@@ -23,10 +23,10 @@ module.exports = class Luldollar extends Commando.Command {
   
       luldollarMessage += '```';
   
-      message.reply(luldollarMessage);
+      message.channel.send(luldollarMessage);
     } catch (e) {
       console.log(e);
-      message.reply('Sorry, something went wrong.');
+      message.channel.send('Sorry, something went wrong.');
     }
   }
 }

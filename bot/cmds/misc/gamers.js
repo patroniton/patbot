@@ -17,7 +17,7 @@ module.exports = class Gamers extends Commando.Command {
       let availabilities = await DatabaseResources.getFutureAvailabilities(args);
 
       if (availabilities.length === 0) {
-        message.reply('No one has set any availabilities');
+        message.channel.send('No one has set any availabilities');
         return;
       }
 
@@ -46,7 +46,7 @@ module.exports = class Gamers extends Commando.Command {
       message.channel.send(reply);
     } catch (e) {
       console.log(e);
-      message.reply('Sorry, something went wrong.');
+      message.channel.send('Sorry, something went wrong.');
     }
   }
   

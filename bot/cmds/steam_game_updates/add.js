@@ -21,14 +21,14 @@ module.exports = class Add extends Commando.Command {
         const name = args.join(' ');
   
         DatabaseResources.insertGame(steamGameId, name);
-        message.reply(`Added ${name} to the game list!`);
+        message.channel.send(`Added ${name} to the game list!`);
       } else {
-        message.reply(`Disabled for non-admins because of some abuse of the command`)
+        message.channel.send(`Disabled for non-admins because of some abuse of the command`)
       }
 
     } catch (e) {
       console.log(e);
-      message.reply('Sorry, something went wrong.');
+      message.channel.send('Sorry, something went wrong.');
     }
   }
 }

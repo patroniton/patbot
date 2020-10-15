@@ -1,7 +1,6 @@
 const Commando = require('discord.js-commando');
 const ArkhamResources = require('../../ArkhamResources.js');
 
-
 module.exports = class Deck extends Commando.Command {
   constructor(client) {
     super(client, {
@@ -28,7 +27,7 @@ module.exports = class Deck extends Commando.Command {
       arkhamMessage.react('◀️').then(() => arkhamMessage.react('▶️'));
     } catch (e) {
       console.log(e);
-      message.reply('Sorry, something went wrong.');
+      message.channel.send('Sorry, something went wrong.');
     }
   }
 

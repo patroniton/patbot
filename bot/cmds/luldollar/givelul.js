@@ -16,7 +16,7 @@ module.exports = class GiveLul extends Commando.Command {
   async run(message, args) {
     try {
       if (message.author.id !== LULDOLLAR_USER_ID) {
-        message.reply('Dopple should remove a luldollar for that.');
+        message.channel.send('Dopple should remove a luldollar for that.');
         return;
       }
 
@@ -27,16 +27,16 @@ module.exports = class GiveLul extends Commando.Command {
           const userToLul = await DatabaseResources.getUserById(nickname.user_id);
           await DatabaseResources.insertLuldollar(userToLul.d_user_id, message.id, 1);
 
-          message.reply(`Gave a luldollar to ${args}!`);
+          message.channel.send(`Gave a luldollar to ${args}!`);
 
           return;
         }
       }
 
-      message.reply(`Couldn't find anyone with a nickname of ${args}`)
+      message.channel.send(`Couldn't find anyone with a nickname of ${args}`)
     } catch (e) {
       console.log(e);
-      message.reply('Sorry, something went wrong.');
+      message.channel.send('Sorry, something went wrong.');
     }
   }
 }
