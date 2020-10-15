@@ -114,13 +114,19 @@ async function getFutureAvailabilities(options) {
     return await getAllFutureAvailabilities();
   }
   return await wrapTransaction(async (db) => {
-    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' AND end <= '${moment().add(3, 'day').format('YYYY-MM-DD')}' ORDER BY start, created_at DESC`);
+    return await db.query(`SELECT ${USER_TABLE}.name, ${AVAILABILITY_TABLE}.* FROM ${AVAILABILITY_TABLE} JOIN ${USER_TABLE} ON ${USER_TABLE}.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' AND end <= '${moment().add(2, 'day').format('YYYY-MM-DD')}' ORDER BY start, created_at DESC`);
   });
 }
 
 async function getAllFutureAvailabilities() {
   return await wrapTransaction(async (db) => {
-    return await db.query(`SELECT user.name, user_availability.* FROM ${AVAILABILITY_TABLE} JOIN user ON user.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' ORDER BY start, created_at DESC`);
+    return await db.query(`SELECT ${USER_TABLE}.name, ${AVAILABILITY_TABLE}.* FROM ${AVAILABILITY_TABLE} JOIN ${USER_TABLE} ON ${USER_TABLE}.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' ORDER BY start, created_at DESC`);
+  });
+}
+
+async function getAvailabileGamersForToday() {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT DISTINCT ${USER_TABLE}.* FROM ${AVAILABILITY_TABLE} JOIN ${USER_TABLE} ON ${USER_TABLE}.id = ${AVAILABILITY_TABLE}.user_id WHERE percentage > 0 AND start = '${moment().format('YYYY-MM-DD')}'`);
   });
 }
 
@@ -138,7 +144,7 @@ async function wrapTransaction(callback) {
   } catch(e) {
     db.end();
     console.log(e);
-    message.reply('Sorry, something went wrong.');
+    message.channel.send('Sorry, something went wrong.');
   }
 }
 
@@ -160,4 +166,5 @@ module.exports = {
   getUserById: getUserById,
   insertAvailability: insertAvailability,
   getFutureAvailabilities: getFutureAvailabilities,
+  getAvailabileGamersForToday: getAvailabileGamersForToday
 };
