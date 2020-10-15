@@ -1,9 +1,7 @@
 const mysql = require('promise-mysql');
 const constants = require('./../env');
 const moment = require('moment');
-const env = 'dev';
-const dbConnection = constants[env].database;
-const DB_NAME = 'patbot';
+const dbConnection = constants[constants.env].database;
 
 const GAME_TABLE = 'game';
 const GAME_UPDATE_TABLE = 'game_update';
@@ -128,7 +126,7 @@ async function wrapTransaction(callback) {
   const db = await mysql.createConnection(dbConnection);
 
   try {
-    await db.query(`USE ${DB_NAME}`);
+    await db.query(`USE ${dbConnection.name}`);
 
     const result = await callback(db);
 
