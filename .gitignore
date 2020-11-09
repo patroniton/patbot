@@ -13,3 +13,4 @@ token.js
 
 # Local History for Visual Studio Code
 .history/
+/database.json

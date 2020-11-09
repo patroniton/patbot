@@ -1,0 +1,24 @@
+{
+  "test": {
+    "driver": "sqlite3",
+    "filename": ":memory:"
+  },
+
+  "dev": {
+    "host": "localhost",
+    "driver": "mysql",
+    "filename": "admin",
+    "password": "admin",
+    "database": "patbot-dev",
+    "multipleStatements": true
+  },
+
+  "prod": {
+    "host": "localhost",
+    "driver": "mysql",
+    "user": "admin",
+    "password": "admin",
+    "database": "patbot",
+    "multipleStatements": true
+  }
+}
