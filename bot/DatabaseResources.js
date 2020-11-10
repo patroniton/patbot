@@ -10,6 +10,7 @@ const USER_TABLE = 'user';
 const LULDOLLAR_TABLE = 'luldollar';
 const NICKNAME_TABLE = 'user_nickname';
 const AVAILABILITY_TABLE = 'user_availability';
+const WEATHER_TABLE = 'weather';
 
 async function getLuldollars() {
   return await wrapTransaction(async (db) => {
@@ -128,6 +129,18 @@ async function getAvailabileGamersForToday() {
   });
 }
 
+async function getAllWeatherData() {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT ${WEATHER_TABLE}.*, ${USER_TABLE}.name FROM ${WEATHER_TABLE} JOIN ${USER_TABLE} ON ${USER_TABLE}.id = ${WEATHER_TABLE}.user_id`);
+  });
+}
+
+async function getWeatherDataForDiscordUser(discordUserId) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT ${WEATHER_TABLE}.*, ${USER_TABLE}.name FROM ${WEATHER_TABLE} JOIN ${USER_TABLE} ON ${USER_TABLE}.id = ${WEATHER_TABLE}.user_id WHERE d_user_id = ${db.escape(discordUserId)}`);
+  });
+}
+
 async function wrapTransaction(callback) {
   const db = await mysql.createConnection(dbConnection);
 
@@ -164,5 +177,7 @@ module.exports = {
   getUserById: getUserById,
   insertAvailability: insertAvailability,
   getFutureAvailabilities: getFutureAvailabilities,
-  getAvailabileGamersForToday: getAvailabileGamersForToday
+  getAvailabileGamersForToday: getAvailabileGamersForToday,
+  getAllWeatherData: getAllWeatherData,
+  getWeatherDataForDiscordUser: getWeatherDataForDiscordUser
 };
