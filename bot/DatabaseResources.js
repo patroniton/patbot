@@ -154,8 +154,8 @@ async function wrapTransaction(callback) {
     return result;
   } catch(e) {
     db.end();
-    console.log(e);
-    message.channel.send('Sorry, something went wrong.');
+    // console.log(e);
+    throw(e);
   }
 }
 
