@@ -25,5 +25,6 @@ module.exports = {
       pat_user_id: '113878392276910084'
     }
   },
-  env: 'prod'
+  env: 'prod',
+  weather_api_key: 'asdf1234'
 };
