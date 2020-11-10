@@ -2,6 +2,7 @@ const Commando = require('discord.js-commando');
 const DatabaseResources = require('../../DatabaseResources');
 const constants = require('./../../../env');
 const LULDOLLAR_USER_ID = constants[constants.env].discord_ids.luldollar_user_id;
+const PAT_USER_ID = constants[constants.env].discord_ids.pat_user_id;
 
 module.exports = class GiveLul extends Commando.Command {
   constructor(client) {
@@ -15,7 +16,7 @@ module.exports = class GiveLul extends Commando.Command {
 
   async run(message, args) {
     try {
-      if (message.author.id !== LULDOLLAR_USER_ID) {
+      if (![LULDOLLAR_USER_ID, PAT_USER_ID].includes(message.author.id)) {
         message.channel.send('Dopple should remove a luldollar for that.');
         return;
       }
