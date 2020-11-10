@@ -1,4 +1,6 @@
 'use strict';
+const env = require('./../env').env;
+const dbName = require('../database.json')[env].database;
 
 var dbm;
 var type;
@@ -19,6 +21,7 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db) {
+  db.runSql(`USE ${dbName}`);
   var filePath = path.join(__dirname, 'sqls', '20201110000853-insert-weather-data-up.sql');
   return new Promise( function( resolve, reject ) {
     fs.readFile(filePath, {encoding: 'utf-8'}, function(err,data){
@@ -34,6 +37,7 @@ exports.up = function(db) {
 };
 
 exports.down = function(db) {
+  db.runSql(`USE ${dbName}`);
   var filePath = path.join(__dirname, 'sqls', '20201110000853-insert-weather-data-down.sql');
   return new Promise( function( resolve, reject ) {
     fs.readFile(filePath, {encoding: 'utf-8'}, function(err,data){

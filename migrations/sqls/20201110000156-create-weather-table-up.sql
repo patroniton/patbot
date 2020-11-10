@@ -1,4 +1,4 @@
-CREATE TABLE `patbot_dev`.`weather` (
+CREATE TABLE `weather` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `user_id` INT NOT NULL,
   `city` VARCHAR(45) NOT NULL,
@@ -8,6 +8,6 @@ CREATE TABLE `patbot_dev`.`weather` (
   UNIQUE INDEX `user_id_UNIQUE` (`user_id` ASC) VISIBLE,
   CONSTRAINT `weather_user_fk`
     FOREIGN KEY (`user_id`)
-    REFERENCES `patbot_dev`.`user` (`id`)
+    REFERENCES `user` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
