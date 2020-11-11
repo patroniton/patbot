@@ -82,9 +82,6 @@ module.exports = class Weather extends Commando.Command {
 
           let icon = icons[weather.weather[0].icon];
 
-          console.log(weather);
-          console.log(weather.weather[0]);
-
           if (!icon) {
             icon = '';
           }
