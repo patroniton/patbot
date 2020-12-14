@@ -124,7 +124,7 @@ async function relayMessageToPat(message) {
 }
 
 function deleteGroovyMessages(message) {
-  const groovyCommandsToDelete = ['play', 'previous', 'next', 'song', 'skip', 'queue', 'back', 'clear', 'loop', 'jump', 'pause', 'stop', 'resume', 'join', '-seek', 'rewind', 'fastforward', 'move'];
+  const groovyCommandsToDelete = ['play', 'remove', 'previous', 'next', 'song', 'skip', 'queue', 'back', 'clear', 'loop', 'jump', 'pause', 'stop', 'resume', 'join', '-seek', 'rewind', 'fastforward', 'move'];
   let isGroovyCommand = false;
 
   if (message.content.startsWith('-')) {
@@ -139,7 +139,7 @@ function deleteGroovyMessages(message) {
     return;
   }
 
-  message.react(['🌋', '💥', '💀', '☠️'].random());
+  message.react(['🌋', '💥', '💀', '☠️', '⚔️', '🗡️', '🩸', '🔫'].random());
   message.delete({ timeout: 1000 * 60 });
 }
 
