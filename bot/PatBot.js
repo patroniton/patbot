@@ -40,7 +40,8 @@ function init() {
     trackNumber: 0,
     options: {
       shuffle: false,
-      loop: false,
+      loopQueue: false,
+      loopSong: false,
       previous: false
     }
   };

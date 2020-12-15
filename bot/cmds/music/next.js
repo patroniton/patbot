@@ -18,7 +18,7 @@ module.exports = class Next extends Commando.Command {
         return message.channel.send('I\'m not playing anything right now.');
       } else {
         queue.connection.dispatcher.end();
-        message.react('👌');
+        message.react('⏭');
       }
     } catch (e) {
       console.log(e);

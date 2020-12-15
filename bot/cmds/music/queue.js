@@ -46,7 +46,7 @@ module.exports = class Queue extends Commando.Command {
           reply += '    ⬐ current track\n';
         }
 
-        reply += `${i}) ${this.trimSongName(songs[i].title)} ${this.getTimeString(songs[i].length)}\n`
+        reply += `${i+1}) ${this.trimSongName(songs[i].title)} ${this.getTimeString(songs[i].length)}\n`
 
         if (i === trackNumber) {
           reply += '    ⬑ current track\n'

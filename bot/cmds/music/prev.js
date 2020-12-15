@@ -19,7 +19,7 @@ module.exports = class Previous extends Commando.Command {
       } else {
         queue.options.previous = true;
         queue.connection.dispatcher.end();
-        message.react('↩️');
+        message.react('⏮');
       }
     } catch (e) {
       console.log(e);

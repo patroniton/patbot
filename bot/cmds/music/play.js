@@ -45,7 +45,8 @@ module.exports = class Play extends Commando.Command {
         title: Util.escapeMarkdown(songInfo.videoDetails.title),
         url: songInfo.videoDetails.video_url,
         length: songInfo.player_response.videoDetails.lengthSeconds,
-        added_by: message.author
+        addedBy: message.author,
+        shufflePlays: 0
       };
 
       const queuedEmbed = message.channel.send(this.getQueuedEmbed(song, message));
@@ -70,10 +71,6 @@ module.exports = class Play extends Commando.Command {
   
         const dispatcher = queue.connection.play(ytdl(song.url))
           .on('finish', () => {
-            // queue = this.client.patbot.music.queue;
-
-            // if loop, trackNumber % songs.length
-           
             if (queue.options.previous) {
               queue.trackNumber = queue.trackNumber - 1;
               queue.options.previous = false;
@@ -81,10 +78,18 @@ module.exports = class Play extends Commando.Command {
               if (queue.trackNumber < 0) {
                 queue.trackNumber = 0;
               }
-            } else {
+            } else if (!queue.options.loopSong) {
               queue.trackNumber = queue.trackNumber + 1;
             }
 
+            if (queue.options.loopQueue) {
+              queue.trackNumber = ((queue.trackNumber + queue.songs.length) % queue.songs.length)
+            }
+
+            if (queue.options.shuffle && !queue.options.loopSong) {
+              queue.trackNumber = Math.floor(Math.random() * queue.songs.length);
+            }
+            
             if (queue.trackNumber < queue.songs.length) {
               play(queue.songs[queue.trackNumber]);
             } else {
@@ -148,3 +153,7 @@ module.exports = class Play extends Commando.Command {
       .setURL(song.url)
   }
 }
+
+// Array.prototype.random = function() {
+//   return this[Math.floor(Math.random() * this.length)];
+// }
