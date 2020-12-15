@@ -28,6 +28,17 @@ function init() {
   // should find a way around this if possible, but works for now
   client.patbot = {};
   client.patbot.startTime = moment();
+  client.patbot.music = {};
+  client.patbot.music.queue = {
+    textChannel: null,
+    voiceChannel: null,
+    connection: null,
+    songs: [],
+    volume: 2,
+    playing: false,
+    active: false,
+    trackNumber: 0
+  };
 
   registerEvents();
 }
@@ -59,6 +70,7 @@ function registerEvents() {
         ['arkham', 'Arkham related commands'],
         ['games', 'Text games to play'],
         ['util', 'Utility commands'],
+        ['music', 'Music commands'],
         ['misc', 'Other commands'],
       ])
       .registerCommandsIn(path.join(__dirname, 'cmds'));
