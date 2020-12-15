@@ -15,6 +15,7 @@ const constants = require('./../env');
 const GAME_UPDATE_CHANNEL_ID = constants[constants.env].discord_ids.game_update_channel_id;
 const LULDOLLAR_USER_ID = constants[constants.env].discord_ids.luldollar_user_id;
 const LULDOLLAR_EMOJI_ID = constants[constants.env].discord_ids.luldollar_emoji_id;
+const GROOVY_BOT_ID = constants[constants.env].discord_ids.groovy_bot_id;
 
 const GAME_CHECK_INTERVAL = 1000 * 60 * 5; // 5 minutes
 
@@ -115,24 +116,50 @@ function registerEvents() {
   });
 
   client.on('message', async (message) => {
-    // relay mention directed at the bot towards pat
-    const pat = await DatabaseResources.getUserById(1);
-    let shouldReply = false;
+    relayMessageToPat(message);
 
-    for (let user of message.mentions.users) {
-      if (user[0] === pat.d_user_id) {
-        return;
-      }
-
-      if (user[0] === client.user.id) {
-        shouldReply = true;
-      }
-    }
-
-    if (shouldReply) {
-      message.channel.send(`You probably meant to mention <@${pat.d_user_id}>`);
-    }
+    deleteGroovyMessages(message);
   });
+}
+
+async function relayMessageToPat(message) {
+  // relay mention directed at the bot towards pat
+  const pat = await DatabaseResources.getUserById(1);
+  let shouldReply = false;
+
+  for (let user of message.mentions.users) {
+    if (user[0] === pat.d_user_id) {
+      return;
+    }
+
+    if (user[0] === client.user.id) {
+      shouldReply = true;
+    }
+  }
+
+  if (shouldReply) {
+    message.channel.send(`You probably meant to mention <@${pat.d_user_id}>`);
+  }
+}
+
+function deleteGroovyMessages(message) {
+  const groovyCommandsToDelete = ['play', 'remove', 'previous', 'next', 'song', 'skip', 'queue', 'back', 'clear', 'loop', 'jump', 'pause', 'stop', 'resume', 'join', '-seek', 'rewind', 'fastforward', 'move'];
+  let isGroovyCommand = false;
+
+  if (message.content.startsWith('-')) {
+    const command = message.content.split('-')[1].split(' ')[0];
+
+    if (groovyCommandsToDelete.includes(command.toLowerCase())) {
+      isGroovyCommand = true;
+    }
+  }
+
+  if (message.author.id !== GROOVY_BOT_ID && !isGroovyCommand) {
+    return;
+  }
+
+  message.react(['🌋', '💥', '💀', '☠️', '⚔️', '🗡️', '🩸', '🔫'].random());
+  message.delete({ timeout: 1000 * 60 });
 }
 
 async function handleGalleryReaction(messageReaction, user) {
@@ -245,6 +272,10 @@ function isBedtime() {
   const end = '09:00:00';
 
   return moment().isBetween(moment(start, timeFormat), moment(end, timeFormat));
+}
+
+Array.prototype.random = function() {
+  return this[Math.floor(Math.random() * this.length)];
 }
 
 module.exports = {
