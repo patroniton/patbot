@@ -29,7 +29,7 @@ function init() {
   client.patbot = {};
   client.patbot.startTime = moment();
   client.patbot.music = {};
-  client.patbot.music.queue = {
+  client.patbot.music.emptyQueue = {
     textChannel: null,
     voiceChannel: null,
     connection: null,
@@ -37,8 +37,14 @@ function init() {
     volume: 2,
     playing: false,
     active: false,
-    trackNumber: 0
+    trackNumber: 0,
+    options: {
+      shuffle: false,
+      loop: false,
+      previous: false
+    }
   };
+  client.patbot.music.queue = client.patbot.music.emptyQueue;
 
   registerEvents();
 }

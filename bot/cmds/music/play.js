@@ -24,6 +24,18 @@ module.exports = class Play extends Commando.Command {
         }
       }
 
+      const serverQueue = this.client.patbot.music.queue
+
+      // resume
+      if (args.length < 1 && serverQueue.active) {
+        if (serverQueue.playing) {
+          args = 'ooh poggers';
+        } else {
+          serverQueue.connection.dispatcher.resume();
+          return message.react('▶️');
+        }
+      }
+
       const results = await Youtube.search(args, { limit: 3 });
       const url = `https://www.youtube.com/watch?v=${results[0].id}`;
 
@@ -31,52 +43,55 @@ module.exports = class Play extends Commando.Command {
       const song = {
         id: songInfo.videoDetails.video_id,
         title: Util.escapeMarkdown(songInfo.videoDetails.title),
-        url: songInfo.videoDetails.video_url
+        url: songInfo.videoDetails.video_url,
+        length: songInfo.player_response.videoDetails.lengthSeconds,
+        added_by: message.author
       };
 
       const queuedEmbed = message.channel.send(this.getQueuedEmbed(song, message));
 
-      if (this.client.patbot.music.queue.active) {
-        this.client.patbot.music.queue.songs.push(song);
+      if (serverQueue.active) {
+        serverQueue.songs.push(song);
         return queuedEmbed;
       }
 
       // set up queue
-      this.client.patbot.music.queue.textChannel = message.channel;
-      this.client.patbot.music.queue.voiceChannel = message.guild.me.voice.channel;
-      this.client.patbot.music.queue.connection = this.client.patbot.voiceConnection;
-      this.client.patbot.music.queue.playing = true;
-      this.client.patbot.music.queue.active = true;
-      this.client.patbot.music.queue.songs.push(song);
-      this.client.patbot.music.queue.trackNumber = 0;
+      serverQueue.textChannel = message.channel;
+      serverQueue.voiceChannel = message.guild.me.voice.channel;
+      serverQueue.connection = this.client.patbot.voiceConnection;
+      serverQueue.playing = true;
+      serverQueue.active = true;
+      serverQueue.songs.push(song);
+      serverQueue.trackNumber = 0;
 
-      const play = async (song) => {
+      const play = async () => {
         const queue = this.client.patbot.music.queue;
-
-        if (!song) {
-          queue.textChannel.send('Done playing!');
-          queue.voiceChannel.leave();
-          this.client.patbot.music.queue = {
-            textChannel: null,
-            voiceChannel: null,
-            connection: null,
-            songs: [],
-            volume: 2,
-            playing: false
-          };
-          return;
-        }
+        const song = queue.songs[queue.trackNumber];
   
         const dispatcher = queue.connection.play(ytdl(song.url))
           .on('finish', () => {
-            queue.trackNumber = queue.trackNumber + 1;
+            // queue = this.client.patbot.music.queue;
 
             // if loop, trackNumber % songs.length
+           
+            if (queue.options.previous) {
+              queue.trackNumber = queue.trackNumber - 1;
+              queue.options.previous = false;
+
+              if (queue.trackNumber < 0) {
+                queue.trackNumber = 0;
+              }
+            } else {
+              queue.trackNumber = queue.trackNumber + 1;
+            }
 
             if (queue.trackNumber < queue.songs.length) {
               play(queue.songs[queue.trackNumber]);
             } else {
-              message.channel.send('No more songs in the queue!');
+              queue.textChannel.send('No more songs in the queue! Use !play to start again.');
+              queue.voiceChannel.leave();
+              this.client.patbot.music.queue = this.client.patbot.music.emptyQueue;
+              return;
             }
           })
           .on('error', error => console.error(error));
@@ -122,14 +137,14 @@ module.exports = class Play extends Commando.Command {
   getQueuedEmbed(song, message) {
     return new Discord.MessageEmbed()
       .setColor('#282c34')
-      .setTitle(`Queued ${song.title}`)
+      .setDescription(`Queued [${song.title}](${song.url})`)
       .setURL(song.url)
   }
 
   getNowPlayingEmbed(song, message) {
     return new Discord.MessageEmbed()
       .setColor('#282c34')
-      .setTitle(`Now playing ${song.title}`)
+      .setDescription(`Now playing [${song.title}](${song.url})`)
       .setURL(song.url)
   }
 }
