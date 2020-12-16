@@ -17,6 +17,7 @@ module.exports = class Join extends Commando.Command {
       if (message.member.voice.channel) {
         voiceChannelToJoin = message.member.voice.channel;
       } else {
+        // join the most populated voice channel
         const voiceChannels = message.member.guild.channels.cache.filter(channel => channel.type === 'voice');
 
         let mostUsersInVoiceChannel = 0;
@@ -34,7 +35,7 @@ module.exports = class Join extends Commando.Command {
       if (voiceChannelToJoin === null) {
         message.channel.send('No one\'s in a voice channel! I don\'t want to be alone :(');
       } else {
-        const connection = await voiceChannelToJoin.join();
+        this.client.patbot.voiceConnection = await voiceChannelToJoin.join();
       }
     } catch (e) {
       console.log(e);
