@@ -164,9 +164,13 @@ module.exports = class MusicPlayer {
     const song = this._getNextSong();
 
     if (!song) {
-      this._send('No more songs in the queue! Use !play to start again.');
+      this._send('No more songs in the queue! Use !play to start again. I will disconnect and purge the queue in 5 minutes if no commands are used.');
       this.playing = false;
-      // this.turnOff();
+
+      setTimeout(() => {
+        this.turnOff();
+      }, 1000 * 60 * 5);
+      
       return;
     }
 
@@ -222,7 +226,6 @@ module.exports = class MusicPlayer {
     if (!this.shouldUpdateTrackNumber) {
       this.shouldUpdateTrackNumber = true;
     } else {
-      // TODO: loopSong bugged
       if (!this.options.loopSong && !this.paused) {
         this.trackNumber++;
       }
