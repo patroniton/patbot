@@ -21,6 +21,7 @@ module.exports = class MusicPlayer {
     this.playing = false;
     this.paused = false;
     this.trackNumber = 0;
+    this.pausedTrackNumber = -1;
     // used to determine whether or not to auto-increment the track number or if it's been set from a command
     this.shouldUpdateTrackNumber = false;
 
@@ -77,23 +78,36 @@ module.exports = class MusicPlayer {
   }
 
   stop(message) {
-    this._end();
     message.react('🛑');
+
+    if (this.isNotPaused()) {
+      this._end();
+    }
   }
 
   previous(message) {
     this.trackNumber -= 1;
     this.shouldUpdateTrackNumber = false;
-
-    this._end();
     message.react('⏮');
+
+    if (this.isPaused()) {
+      this.connection.dispatcher.resume();
+    }
+    this._end();
   }
 
   next(message) {
     this.trackNumber += 1;
     this.shouldUpdateTrackNumber = false;
-    this._end();
     message.react('⏭');
+
+    // if (this.isPaused()) {
+    //   this.connection.dispatcher.resume();
+    // }
+    this._end();
+    if (this.isPaused()) {
+      this.play();
+    }
   }
 
   pause(message) {
@@ -101,10 +115,13 @@ module.exports = class MusicPlayer {
     message.react('⏸️');
     this.paused = true;
     this.playing = false;
+    // this.pausedTrackNumber = this.trackNumber;
   }
 
   resume(message) {
     this.connection.dispatcher.resume();
+    this.paused = false;
+    this.playing = true;
     message.react('▶️');
   }
 
@@ -140,12 +157,10 @@ module.exports = class MusicPlayer {
   }
 
   _end() {
-    const isPaused = this.isPaused();
-    this.connection.dispatcher.end();
-
-    if (isPaused) {
-      this.play();
+    if (this.isPaused()) {
+      this.connection.dispatcher.resume();
     }
+    this.connection.dispatcher.end();
   }
 
   async queueSong(text, message) {
@@ -159,12 +174,13 @@ module.exports = class MusicPlayer {
     this._send(this._getQueuedEmbed(song));
   }
 
-  async play(song = null) {
+  async play() {
     if (this.isPaused()) {
-      this.resume();
+      this.connection.dispatcher.resume();
       return;
     }
-    song = song || this._getNextSong();
+
+    const song = this._getNextSong();
 
     if (!song) {
       this._send('No more songs in the queue! Use !play to start again.');
@@ -177,7 +193,7 @@ module.exports = class MusicPlayer {
     this.paused = false;
 
     const dispatcher = this.connection.play(ytdl(song.url))
-      .on('finish', () => {
+      .once('finish', () => {
         this.play();
       })
       .on('error', error => console.error(error));
@@ -261,7 +277,14 @@ module.exports = class MusicPlayer {
   }
 
   isPaused() {
-    return this.connection.dispatcher.paused || this.paused;
+    if (this.connection.dispatcher) {
+      return this.paused || this.connection.dispatcher.paused;
+    }
+    return this.paused;
+  }
+
+  isNotPaused() {
+    return !this.isPaused();
   }
 
   getOptions() {
@@ -273,7 +296,7 @@ module.exports = class MusicPlayer {
 
     Object.entries(this.options).forEach(option => {
       let emoji = option[1] ? '✔️' : '❌';
-      reply += `${emoji} ${option[0]}\n`;
+      reply += `${emoji}${option[0]}\n`;
     });
 
     reply += '```';

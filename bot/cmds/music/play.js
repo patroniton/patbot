@@ -1,8 +1,4 @@
-const Discord = require('discord.js');
 const Commando = require('discord.js-commando');
-const Youtube = require('youtube-sr');
-const ytdl = require('ytdl-core');
-const { Util } = require('discord.js');
 
 module.exports = class Play extends Commando.Command {
   constructor(client) {
@@ -34,7 +30,7 @@ module.exports = class Play extends Commando.Command {
 
       await player.queueSong(args, message);
     
-      if (player.isNotPlaying() || player.isPaused()) {
+      if (player.isNotPlaying() || (player.isPaused() && args.length === 0)) {
         player.play();
       }
     } catch (e) {
