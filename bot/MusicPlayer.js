@@ -21,7 +21,6 @@ module.exports = class MusicPlayer {
     this.playing = false;
     this.paused = false;
     this.trackNumber = 0;
-    this.pausedTrackNumber = -1;
     // used to determine whether or not to auto-increment the track number or if it's been set from a command
     this.shouldUpdateTrackNumber = false;
 
@@ -42,7 +41,7 @@ module.exports = class MusicPlayer {
   }
 
   turnOff() {
-    // maybe keep options/queue for 30m, then reset
+    // TODO: maybe keep options/queue for 30m, then reset
     this.voiceChannel.leave();
     this.resetOptions();
   }
@@ -89,10 +88,6 @@ module.exports = class MusicPlayer {
     this.trackNumber -= 1;
     this.shouldUpdateTrackNumber = false;
     message.react('⏮');
-
-    if (this.isPaused()) {
-      this.connection.dispatcher.resume();
-    }
     this._end();
   }
 
@@ -100,14 +95,7 @@ module.exports = class MusicPlayer {
     this.trackNumber += 1;
     this.shouldUpdateTrackNumber = false;
     message.react('⏭');
-
-    // if (this.isPaused()) {
-    //   this.connection.dispatcher.resume();
-    // }
     this._end();
-    if (this.isPaused()) {
-      this.play();
-    }
   }
 
   pause(message) {
@@ -115,7 +103,6 @@ module.exports = class MusicPlayer {
     message.react('⏸️');
     this.paused = true;
     this.playing = false;
-    // this.pausedTrackNumber = this.trackNumber;
   }
 
   resume(message) {
@@ -157,10 +144,9 @@ module.exports = class MusicPlayer {
   }
 
   _end() {
-    if (this.isPaused()) {
-      this.connection.dispatcher.resume();
-    }
     this.connection.dispatcher.end();
+    // see https://github.com/discordjs/discord.js/issues/4062 for reasoning for calling dispatcher._writeCallback()
+    this.connection.dispatcher._writeCallback();
   }
 
   async queueSong(text, message) {
@@ -175,11 +161,6 @@ module.exports = class MusicPlayer {
   }
 
   async play() {
-    if (this.isPaused()) {
-      this.connection.dispatcher.resume();
-      return;
-    }
-
     const song = this._getNextSong();
 
     if (!song) {
@@ -192,7 +173,7 @@ module.exports = class MusicPlayer {
     this.playing = true;
     this.paused = false;
 
-    const dispatcher = this.connection.play(ytdl(song.url))
+    const dispatcher = this.connection.play(ytdl(song.url, {audioonly: true}))
       .once('finish', () => {
         this.play();
       })
