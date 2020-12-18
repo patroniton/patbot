@@ -12,17 +12,7 @@ module.exports = class Resume extends Commando.Command {
 
   async run(message, args) {
     try {
-      const queue = this.client.patbot.music.queue;
-
-      if (!queue.active) {
-        return message.channel.send('I\'m not playing anything right now.');
-      } else if (queue.playing) {
-        return message.channel.send('It\'s already playing!');
-      } else {
-        queue.connection.dispatcher.resume();
-        message.react('▶️');
-        queue.playing = true;
-      }
+      this.client.patbot.musicPlayer.resume(message);
     } catch (e) {
       console.log(e);
       message.channel.send('Sorry, something went wrong.');

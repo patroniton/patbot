@@ -4,6 +4,7 @@ const token = require('./../token.js');
 const SteamResources = require('./SteamResources.js');
 const DatabaseResources = require('./DatabaseResources.js');
 const ArkhamResources = require('./ArkhamResources.js');
+const MusicPlayer = require('./MusicPlayer.js');
 
 const Commando = require('discord.js-commando');
 const client = new Commando.CommandoClient({
@@ -23,30 +24,12 @@ let activeGalleries = {
   arkham: false
 };
 
-
 function init() {
   // this is to solve needing data persisted through the bot (but without using a database)
   // should find a way around this if possible, but works for now
   client.patbot = {};
   client.patbot.startTime = moment();
-  client.patbot.music = {};
-  client.patbot.music.emptyQueue = {
-    textChannel: null,
-    voiceChannel: null,
-    connection: null,
-    songs: [],
-    volume: 2,
-    playing: false,
-    active: false,
-    trackNumber: 0,
-    options: {
-      shuffle: false,
-      loopQueue: false,
-      loopSong: false,
-      previous: false
-    }
-  };
-  client.patbot.music.queue = client.patbot.music.emptyQueue;
+  client.patbot.musicPlayer = new MusicPlayer(client);
 
   registerEvents();
 }
@@ -88,6 +71,8 @@ function registerEvents() {
   });
 
   client.on('messageReactionAdd', async (messageReaction, user) => {
+    // TODO: music player options react to change options
+
     // luldollar add
     if (user.id === LULDOLLAR_USER_ID && messageReaction.emoji.id === LULDOLLAR_EMOJI_ID) {
       DatabaseResources.insertLuldollar(messageReaction.message.author.id, messageReaction.message.id).then(() => {
@@ -102,6 +87,8 @@ function registerEvents() {
   });
   
   client.on('messageReactionRemove', async (messageReaction, user) => {
+    // TODO: music player options react to change options
+   
     // luldollar remove
     if (user.id === LULDOLLAR_USER_ID && messageReaction.emoji.id === LULDOLLAR_EMOJI_ID) {
       DatabaseResources.deleteLuldollar(messageReaction.message.id).then(() => {
@@ -119,6 +106,7 @@ function registerEvents() {
     relayMessageToPat(message);
 
     deleteGroovyMessages(message);
+    deleteMusicPlayerMessages(message);
   });
 }
 
@@ -160,6 +148,24 @@ function deleteGroovyMessages(message) {
 
   message.react(['🌋', '💥', '💀', '☠️', '⚔️', '🗡️', '🩸', '🔫'].random());
   message.delete({ timeout: 1000 * 60 });
+}
+
+function deleteMusicPlayerMessages(message) {
+  const commandsToDelete = ['play', 'remove', 'previous', 'next', 'song', 'skip', 'queue', 'back', 'clear', 'loop', 'jump', 'pause', 'stop', 'resume', 'join', '-seek', 'rewind', 'fastforward', 'move'];
+  let isCommand = false;
+
+  if (message.content.startsWith('!')) {
+    const command = message.content.split('!')[1].split(' ')[0];
+
+    if (commandsToDelete.includes(command.toLowerCase())) {
+      isCommand = true;
+    }
+  }
+
+  if (isCommand) {
+    message.react(['🌋', '💥', '💀', '☠️', '⚔️', '🗡️', '🩸', '🔫'].random());
+    message.delete({ timeout: 1000 * 60 });
+  }
 }
 
 async function handleGalleryReaction(messageReaction, user) {
