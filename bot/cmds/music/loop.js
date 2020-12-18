@@ -12,18 +12,12 @@ module.exports = class Loop extends Commando.Command {
 
   async run(message, args) {
     try {
-      const queue = this.client.patbot.music.queue;
-  
-      if (!queue.active) {
-        return message.channel.send('I\'m not playing anything right now.');
+      const player = this.client.patbot.musicPlayer;
+      
+      if (args.length === 0) {
+        player.loop(message);
       } else {
-        if (args.length > 0) { // eg. !loop off
-          this.client.patbot.music.queue.options.loopQueue = false;
-          message.react('🛑');
-        } else {
-          this.client.patbot.music.queue.options.loopQueue = true;
-          message.react('🔁');
-        }
+        player.stopLoop(message);
       }
     } catch (e) {
       console.log(e);

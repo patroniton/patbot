@@ -12,18 +12,12 @@ module.exports = class Shuffle extends Commando.Command {
 
   async run(message, args) {
     try {
-      const queue = this.client.patbot.music.queue;
- 
-      if (!queue.active) {
-        return message.channel.send('I\'m not playing anything right now.');
+      const player = this.client.patbot.musicPlayer;
+      
+      if (args.length === 0) {
+        player.shuffle(message);
       } else {
-        if (args.length > 0) { // eg. !shuffle off
-          this.client.patbot.music.queue.options.shuffle = false;
-          message.react('🛑');
-        } else {
-          this.client.patbot.music.queue.options.shuffle = true;
-          message.react('🔀');
-        }
+        player.stopShuffle(message);
       }
     } catch (e) {
       console.log(e);

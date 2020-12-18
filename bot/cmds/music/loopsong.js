@@ -12,18 +12,12 @@ module.exports = class LoopSong extends Commando.Command {
 
   async run(message, args) {
     try {
-      const queue = this.client.patbot.music.queue;
-   
-      if (!queue.active) {
-        return message.channel.send('I\'m not playing anything right now.');
+      const player = this.client.patbot.musicPlayer;
+      
+      if (args.length === 0) {
+        player.loopSong(message);
       } else {
-        if (args.length > 0) { // eg. !loopsong off
-          this.client.patbot.music.queue.options.loopSong = false;
-          message.react('🛑');
-        } else {
-          this.client.patbot.music.queue.options.loopSong = true;
-          message.react('🔄');
-        }
+        player.stopLoopSong(message);
       }
     } catch (e) {
       console.log(e);
