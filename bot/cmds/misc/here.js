@@ -79,7 +79,6 @@ module.exports = class Here extends Commando.Command {
           comment = words.join(' ').trim();
         }
 
-        // comment = comment.trim();
         dates.push({start, percentage, comment});
       }
 
