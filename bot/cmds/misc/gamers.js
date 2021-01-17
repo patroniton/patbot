@@ -41,6 +41,10 @@ module.exports = class Gamers extends Commando.Command {
 
         gamersForDay.push(availability.name);
         reply += `\n${availability.name} ${availability.percentage}%`;
+
+        if (availability.comment && availability.comment.length > 0) {
+          reply += ` "${availability.comment}"`;
+        }
       }
 
       message.channel.send(reply);

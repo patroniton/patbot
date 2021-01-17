@@ -102,9 +102,9 @@ async function getNicknames() {
   });
 }
 
-async function insertAvailability(userId, discordMessageId, start, end, percentage = 100, isPresent = 1) {
+async function insertAvailability(userId, discordMessageId, start, comment, percentage = 100) {
   return await wrapTransaction(async (db) => {
-    return await db.query(`INSERT INTO ${AVAILABILITY_TABLE} (user_id, d_message_id, start, end, percentage, is_present) VALUES (${db.escape(userId)}, ${db.escape(discordMessageId)}, ${db.escape(start)}, ${db.escape(end)}, ${db.escape(percentage)}, ${db.escape(isPresent)})`);
+    return await db.query(`INSERT INTO ${AVAILABILITY_TABLE} (user_id, d_message_id, start, comment, percentage) VALUES (${db.escape(userId)}, ${db.escape(discordMessageId)}, ${db.escape(start)}, ${db.escape(comment)}, ${db.escape(percentage)})`);
   });
 }
 
@@ -113,13 +113,13 @@ async function getFutureAvailabilities(options) {
     return await getAllFutureAvailabilities();
   }
   return await wrapTransaction(async (db) => {
-    return await db.query(`SELECT ${USER_TABLE}.name, ${AVAILABILITY_TABLE}.* FROM ${AVAILABILITY_TABLE} JOIN ${USER_TABLE} ON ${USER_TABLE}.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' AND end <= '${moment().add(2, 'day').format('YYYY-MM-DD')}' ORDER BY start, created_at DESC`);
+    return await db.query(`SELECT ${USER_TABLE}.name, ${AVAILABILITY_TABLE}.* FROM ${AVAILABILITY_TABLE} JOIN ${USER_TABLE} ON ${USER_TABLE}.id = ${AVAILABILITY_TABLE}.user_id WHERE start >= '${moment().format('YYYY-MM-DD')}' AND start <= '${moment().add(2, 'day').format('YYYY-MM-DD')}' ORDER BY start, created_at DESC`);
   });
 }
 
 async function getAllFutureAvailabilities() {
   return await wrapTransaction(async (db) => {
-    return await db.query(`SELECT ${USER_TABLE}.name, ${AVAILABILITY_TABLE}.* FROM ${AVAILABILITY_TABLE} JOIN ${USER_TABLE} ON ${USER_TABLE}.id = ${AVAILABILITY_TABLE}.user_id WHERE end >= '${moment().format('YYYY-MM-DD')}' ORDER BY start, created_at DESC`);
+    return await db.query(`SELECT ${USER_TABLE}.name, ${AVAILABILITY_TABLE}.* FROM ${AVAILABILITY_TABLE} JOIN ${USER_TABLE} ON ${USER_TABLE}.id = ${AVAILABILITY_TABLE}.user_id WHERE start >= '${moment().format('YYYY-MM-DD')}' ORDER BY start, created_at DESC`);
   });
 }
 
