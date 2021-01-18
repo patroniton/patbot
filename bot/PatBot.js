@@ -131,7 +131,7 @@ async function relayMessageToPat(message) {
 }
 
 function deleteGroovyMessages(message) {
-  const groovyCommandsToDelete = ['play', 'remove', 'previous', 'next', 'song', 'skip', 'queue', 'back', 'clear', 'loop', 'jump', 'pause', 'stop', 'resume', 'join', '-seek', 'rewind', 'fastforward', 'move'];
+  const groovyCommandsToDelete = ['play', 'remove', 'prev', 'previous', 'next', 'song', 'skip', 'queue', 'back', 'clear', 'loop', 'jump', 'pause', 'stop', 'resume', 'join', '-seek', 'rewind', 'fastforward', 'move'];
   let isGroovyCommand = false;
 
   if (message.content.startsWith('-')) {
@@ -151,7 +151,7 @@ function deleteGroovyMessages(message) {
 }
 
 function deleteMusicPlayerMessages(message) {
-  const commandsToDelete = ['play', 'remove', 'previous', 'next', 'song', 'skip', 'queue', 'back', 'clear', 'loop', 'jump', 'pause', 'stop', 'resume', 'join', '-seek', 'rewind', 'fastforward', 'move'];
+  const commandsToDelete = ['musicoptions', 'play', 'remove', 'previous', 'next', 'song', 'skip', 'queue', 'back', 'clear', 'loop', 'jump', 'pause', 'stop', 'resume', 'join', '-seek', 'rewind', 'fastforward', 'move'];
   let isCommand = false;
 
   if (message.content.startsWith('!')) {
