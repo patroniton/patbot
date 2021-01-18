@@ -3,20 +3,26 @@ const Youtube = require('youtube-sr');
 const ytdl = require('ytdl-core');
 const { Util } = require('discord.js');
 
-const PREVIOUS = -1;
-
 module.exports = class MusicPlayer {
   constructor() {
-    this.resetOptions();
-    // commandQueue to avoid clashing commands at the same time
+    this._resetPlayer();
+    this.commandQueue = [];
   }
 
-  resetOptions() {
+  _resetPlayer(purgeQueue = true) {
     this.on = false;
+
+    if (this.isPlaying()) {
+      this._end();
+    }
+
+    if (this.voiceChannel) {
+      this.voiceChannel.leave();
+    }
+
     this.textChannel = null;
     this.voiceChannel = null;
     this.connection = null;
-    this.songs = [];
     this.volume = 2;
     this.playing = false;
     this.paused = false;
@@ -24,11 +30,19 @@ module.exports = class MusicPlayer {
     // used to determine whether or not to auto-increment the track number or if it's been set from a command
     this.shouldUpdateTrackNumber = false;
 
+    if (purgeQueue) {
+      this.songs = [];
+    }
+
     this.options = {
       shuffle: false,
       loopQueue: false,
       loopSong: false,
     };
+  }
+
+  reset(purgeQueue = true) {
+    this._resetPlayer(purgeQueue);
   }
   
   turnOn(voiceConnection, message) {
@@ -41,9 +55,10 @@ module.exports = class MusicPlayer {
   }
 
   turnOff() {
+    this.on = false;
     // TODO: maybe keep options/queue for 30m, then reset
     this.voiceChannel.leave();
-    this.resetOptions();
+    this._resetPlayer();
   }
 
   shuffle(message) {
@@ -76,43 +91,100 @@ module.exports = class MusicPlayer {
     message.react('❌');
   }
 
-  stop(message) {
-    message.react('🛑');
+  // TODO: doesn't do anything
+  stop(message = null) {
+    if (message) {
+      message.react('🛑');
+    }
 
     if (this.isNotPaused()) {
       this._end();
     }
   }
 
-  previous(message) {
+  async previous(message = null) {
+    if (this.isPaused()) {
+      await this.play();
+    }
+
+    if (message) {
+      message.react('⏮');
+    }
+
     this.trackNumber -= 1;
     this.shouldUpdateTrackNumber = false;
-    message.react('⏮');
+    if (this.isPaused()) {
+      this.resume()
+    }
     this._end();
   }
 
-  next(message) {
+  async next(message = null) {
+    if (this.isPaused()) {
+      await this.play();
+    }
+    
+    if (message) {
+      message.react('⏭');
+    }
+
     this.trackNumber += 1;
     this.shouldUpdateTrackNumber = false;
-    message.react('⏭');
+
     this._end();
   }
 
-  pause(message) {
+  pause(message = null) {
+    if (message) {
+      message.react('⏸️');
+    }
+
     this.connection.dispatcher.pause();
-    message.react('⏸️');
     this.paused = true;
     this.playing = false;
   }
 
-  resume(message) {
+  resume(message = null) {
+    if (message) {
+      message.react('▶️');
+    }
+
     this.connection.dispatcher.resume();
     this.paused = false;
     this.playing = true;
-    message.react('▶️');
+  }
+
+  // TODO: probably shouldn't be passing message here to be parsed and instead just pass the number
+  setTrack(message, args) {
+    if (message) {
+      message.react('👌');
+    }
+
+    let track = parseInt(args);
+
+    if (isNaN(track)) {
+      this._send(`Couldn't parse a number from the given argument ${args}`);
+      return;
+    }
+
+    // array starts at 0, but display for songs starts at 1, so the user wants the previous track number
+    track--;
+
+    if (track < 0 || track > this.songs.length - 1) {
+      this._send(`Please enter a valid number within the tracks range. Number given: ${track}. Valid numbers between 1-${this.songs.length}`);
+      return;
+    }
+
+    this.trackNumber = track;
+    this.shouldUpdateTrackNumber = false;
+    this._end();
   }
 
   showQueue(message) {
+    if (this.songs.length < 1) {
+      return;
+    }
+
     let start = 0;
     let end = 10;
 
@@ -144,9 +216,20 @@ module.exports = class MusicPlayer {
   }
 
   _end() {
-    this.connection.dispatcher.end();
-    // see https://github.com/discordjs/discord.js/issues/4062 for reasoning for calling dispatcher._writeCallback()
-    this.connection.dispatcher._writeCallback();
+    if (this.connection && this.connection.dispatcher) {
+      this.connection.dispatcher.end();
+
+      // see https://github.com/discordjs/discord.js/issues/4062 for reasoning for calling dispatcher._writeCallback()
+
+      // sometimes this errors out saying "this.connection.dispatcher._writeCallback() is not a function"
+      if (this.isFunction(this.connection.dispatcher._writeCallback)) {
+        this.connection.dispatcher._writeCallback();
+      }
+    }
+  }
+
+  isFunction(fn) {
+    return fn && {}.toString.call(fn) === '[object Function]';
   }
 
   async queueSong(text, message) {
@@ -160,18 +243,43 @@ module.exports = class MusicPlayer {
     this._send(this._getQueuedEmbed(song));
   }
 
+  debug() {
+    console.log('----------------------------------------------');
+    console.log(`this.connection: ${this.connection}`);
+    console.log(`this.volume: ${this.volume}`);
+    console.log(`this.playing: ${this.playing}`);
+    console.log(`this.paused: ${this.paused}`);
+    console.log(`this.trackNumber: ${this.trackNumber}`);
+    console.log(`this.shouldUpdateTrackNumber: ${this.shouldUpdateTrackNumber}`);
+    console.log('----------------------------------------------');
+  }
+
   async play() {
+    if (this.isPaused()) {
+      this.connection.dispatcher.resume();
+      this.paused = false;
+      return;
+    }
+
     const song = this._getNextSong();
 
     if (!song) {
       this._send('No more songs in the queue! Use !play to start again. I will disconnect and purge the queue in 5 minutes if no commands are used.');
       this.playing = false;
 
-      setTimeout(() => {
-        this.turnOff();
-      }, 1000 * 60 * 5);
-      
+      if (!this.turnOffTimeoutId) {
+        this.turnOffTimeoutId = setTimeout(() => {
+          this.turnOffTimeoutId = null;
+          this.turnOff();
+        }, 1000 * 60 * 5);
+      }
+
       return;
+    } else {
+      if (this.turnOffTimeoutId) {
+        clearTimeout(this.turnOffTimeoutId);
+        this.turnOffTimeoutId = null;
+      }
     }
 
     this.playing = true;
@@ -179,7 +287,9 @@ module.exports = class MusicPlayer {
 
     const dispatcher = this.connection.play(ytdl(song.url, {audioonly: true}))
       .once('finish', () => {
-        this.play();
+        if (this.isOn()) {
+          this.play();
+        }
       })
       .on('error', error => console.error(error));
 
@@ -226,7 +336,7 @@ module.exports = class MusicPlayer {
     if (!this.shouldUpdateTrackNumber) {
       this.shouldUpdateTrackNumber = true;
     } else {
-      if (!this.options.loopSong && !this.paused) {
+      if (!this.options.loopSong && !this.paused && this.isPlaying()) {
         this.trackNumber++;
       }
     }
@@ -261,7 +371,7 @@ module.exports = class MusicPlayer {
   }
 
   isPaused() {
-    if (this.connection.dispatcher) {
+    if (this.connection && this.connection.dispatcher) {
       return this.paused || this.connection.dispatcher.paused;
     }
     return this.paused;
@@ -288,7 +398,7 @@ module.exports = class MusicPlayer {
     message.channel.send(reply).then(message => {
       // TODO: add more fun emojis
       message.react(['🌋', '💥', '💀', '☠️', '⚔️', '🗡️', '🩸', '🔫'].random());
-      message.delete({ timeout: 1000 * 60 });
+      // message.delete({ timeout: 1000 * 60 });
     });
   }
 
@@ -342,7 +452,7 @@ module.exports = class MusicPlayer {
     this.textChannel.send(message).then(message => {
       // TODO: add more fun emojis
       message.react(['🌋', '💥', '💀', '☠️', '⚔️', '🗡️', '🩸', '🔫'].random());
-      message.delete({ timeout: 1000 * 60 });
+      // message.delete({ timeout: 1000 * 60 });
     });
   }
 }
