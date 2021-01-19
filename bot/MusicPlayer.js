@@ -171,7 +171,7 @@ module.exports = class MusicPlayer {
     track--;
 
     if (track < 0 || track > this.songs.length - 1) {
-      this._send(`Please enter a valid number within the tracks range. Number given: ${track}. Valid numbers between 1-${this.songs.length}`);
+      this._send(`Please enter a valid number within the tracks range. Number given: ${track + 1}. Valid numbers between 1-${this.songs.length}`);
       return;
     }
 
@@ -180,16 +180,51 @@ module.exports = class MusicPlayer {
     this._end();
   }
 
+  remove(message, args) {
+    let track = parseInt(args);
+
+    if (isNaN(track)) {
+      this._send(`Couldn't parse a number from the given argument ${args}`);
+      return;
+    }
+
+    // array starts at 0, but display for songs starts at 1, so the user wants the previous track number
+    track--;
+
+    if (track < 0 || track > this.songs.length - 1) {
+      this._send(`Please enter a valid number within the tracks range. Number given: ${track + 1}. Valid numbers between 1-${this.songs.length}`);
+      return;
+    }
+
+    // track being removed is before currently playing track, so have to update our trackNumber
+    if (track < this.trackNumber) {
+      this.trackNumber--;
+    }
+    
+    if (message) {
+      message.react('⛔');
+    }
+
+    const removedSong = this.songs.splice(track, 1)[0];
+    
+    this._send(this._getRemovedEmbed(removedSong));
+  }
+
+  current(message) {
+    if (this.isOn() && this.songs.length > 0) {
+      this._send(this._getCurrentlyPlayingEmbed(this.songs[this.trackNumber]));
+    }
+
+    message.channel.send('No songs are playing or queued.');
+  }
+
   showQueue(message) {
     if (this.songs.length < 1) {
       return;
     }
 
-    let start = 0;
-    let end = 10;
-
-    start = this.trackNumber - 5;
-    end = this.trackNumber + 5;
+    let start = this.trackNumber - 5;
+    let end = this.trackNumber + 5;
 
     if (start < 0) {
       end += Math.abs(start);
@@ -409,7 +444,7 @@ module.exports = class MusicPlayer {
         reply += '    ⬐ current track\n';
       }
 
-      reply += `${i+1}) ${this.trimSongName(this.songs[i].title)} ${this.getTimeString(this.songs[i].length)}\n`
+      reply += `${i < 9 ? '0' : ''}${i+1}) ${this.trimSongName(this.songs[i].title)} ${this.getTimeString(this.songs[i].length)}\n`
 
       if (i === this.trackNumber) {
         reply += '    ⬑ current track\n';
@@ -422,11 +457,13 @@ module.exports = class MusicPlayer {
   }
 
   getTimeString(seconds) {
-    return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
-    // new Date(SECONDS * 1000).toISOString().substr(11, 8);
+    // return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
+    return new Date(seconds * 1000).toISOString().substr(14, 5);
   }
 
   trimSongName(songTitle) {
+    songTitle = songTitle.replace('[', '(').replace(']', ')');
+
     if (songTitle.length >= 37) {
       return songTitle.substring(0, 36) + '…';
     }
@@ -445,6 +482,20 @@ module.exports = class MusicPlayer {
     return new Discord.MessageEmbed()
       .setColor('#282c34')
       .setDescription(`Now playing [${song.title}](${song.url})\nAdded by <@${song.addedBy}>`)
+      .setURL(song.url);
+  }
+
+  _getCurrentlyPlayingEmbed(song) {
+    return new Discord.MessageEmbed()
+      .setColor('#282c34')
+      .setDescription(`Playing [${song.title}](${song.url})\nAdded by <@${song.addedBy}>`)
+      .setURL(song.url);
+  }
+
+  _getRemovedEmbed(song) {
+    return new Discord.MessageEmbed()
+      .setColor('#282c34')
+      .setDescription(`Removed [${song.title}](${song.url})`)
       .setURL(song.url);
   }
 
