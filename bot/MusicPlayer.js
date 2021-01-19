@@ -398,7 +398,7 @@ module.exports = class MusicPlayer {
     message.channel.send(reply).then(message => {
       // TODO: add more fun emojis
       message.react(['🌋', '💥', '💀', '☠️', '⚔️', '🗡️', '🩸', '🔫'].random());
-      // message.delete({ timeout: 1000 * 60 });
+      message.delete({ timeout: 1000 * 60 });
     });
   }
 
@@ -452,7 +452,7 @@ module.exports = class MusicPlayer {
     this.textChannel.send(message).then(message => {
       // TODO: add more fun emojis
       message.react(['🌋', '💥', '💀', '☠️', '⚔️', '🗡️', '🩸', '🔫'].random());
-      // message.delete({ timeout: 1000 * 60 });
+      message.delete({ timeout: 1000 * 60 });
     });
   }
 }
