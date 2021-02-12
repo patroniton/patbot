@@ -4,7 +4,10 @@ const token = require('./../token.js');
 const SteamResources = require('./SteamResources.js');
 const DatabaseResources = require('./DatabaseResources.js');
 const ArkhamResources = require('./ArkhamResources.js');
+const ApexResources = require('./ApexResources.js');
 const MusicPlayer = require('./MusicPlayer.js');
+const fs = require('fs');
+const fetch = require('node-fetch')
 
 const Commando = require('discord.js-commando');
 const client = new Commando.CommandoClient({
@@ -17,6 +20,7 @@ const GAME_UPDATE_CHANNEL_ID = constants[constants.env].discord_ids.game_update_
 const LULDOLLAR_USER_ID = constants[constants.env].discord_ids.luldollar_user_id;
 const LULDOLLAR_EMOJI_ID = constants[constants.env].discord_ids.luldollar_emoji_id;
 const GROOVY_BOT_ID = constants[constants.env].discord_ids.groovy_bot_id;
+const APEX_STATS_CHANNEL_ID = constants[constants.env].discord_ids.apex_stats_channel_id;
 
 const GAME_CHECK_INTERVAL = 1000 * 60 * 5; // 5 minutes
 
@@ -62,6 +66,7 @@ function registerEvents() {
         ['games', 'Text games to play'],
         ['util', 'Utility commands'],
         ['music', 'Music commands'],
+        ['apex', 'Apex Legends commands'],
         ['misc', 'Other commands'],
       ])
       .registerCommandsIn(path.join(__dirname, 'cmds'));
@@ -107,6 +112,7 @@ function registerEvents() {
 
     deleteGroovyMessages(message);
     deleteMusicPlayerMessages(message);
+    checkForApexStats(message);
   });
 }
 
@@ -166,6 +172,66 @@ function deleteMusicPlayerMessages(message) {
     message.react(['🌋', '💥', '💀', '☠️', '⚔️', '🗡️', '🩸', '🔫'].random());
     message.delete({ timeout: 1000 * 60 });
   }
+}
+
+async function checkForApexStats(message) {
+  if (message.channel.id !== APEX_STATS_CHANNEL_ID || message.attachments.size < 1) {
+    return;
+  }
+
+  console.log(message.attachments);
+
+  const screenshot = message.attachments.first();
+
+  const stats = await ApexResources.getStatsFromImageUrl(screenshot.attachment, screenshot.height, screenshot.width);
+
+  // example stats array
+  // [
+  //   ['1', '15']
+  //   [ 'D oooooooo', '2', '1057', '17:41', '0', '0' ],
+  //   [ 'Marley', '8', '1417', '1741', '0', '0' ],
+  //   [ 'Fade Guy', '7', '1523', '17:41', '4', '0' ]
+  // ]
+  
+  const generalStats = stats.shift();
+
+  if (isNaN(generalStats[0]) || isNaN(generalStats[1])) {
+    console.error('ERROR: Expected numeric values for stats. Got the following: ');
+    console.error(generalStats[0]);
+    console.error(generalStats[1]);
+    return;
+  }
+
+  let apexGame = await DatabaseResources.insertApexGame(generalStats[0], generalStats[1]);
+  apexGame.id = apexGame.insertId;
+  
+  const url = screenshot.attachment;
+  const response = await fetch(url);
+  const buffer = await response.buffer();
+  fs.writeFile(`./apex_game_screenshots/${apexGame.id}.png`, buffer, () => console.log(`Finished saving game with ID ${apexGame.id}`));
+
+  for(let playerStats of stats) {
+    console.log('playerStats');
+    console.log(playerStats);
+    let nickname = await DatabaseResources.getNickname(playerStats[0].replace(' ', ''));
+
+    if (!nickname) {
+      nickname = {user_id: null}
+    }
+
+    // adding in the : character for survival time if it's not present
+    if (!playerStats[3].includes(':') && playerStats[3].length >= 2) {
+      playerStats[3] = playerStats[3].substr(0, playerStats[3].length - 2) + ':' + playerStats[3].substr(playerStats[3].length - 2)
+    }
+
+    await DatabaseResources.insertApexGameStats(nickname.user_id, apexGame.id, playerStats[1], playerStats[2], playerStats[3], playerStats[4], playerStats[5]);
+  }
+
+  apexGame = await DatabaseResources.getApexGame(apexGame.id);
+
+  const reply = await ApexResources.getGameDisplayText(apexGame);
+
+  message.channel.send(reply);
 }
 
 async function handleGalleryReaction(messageReaction, user) {

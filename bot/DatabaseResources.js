@@ -11,6 +11,8 @@ const LULDOLLAR_TABLE = 'luldollar';
 const NICKNAME_TABLE = 'user_nickname';
 const AVAILABILITY_TABLE = 'user_availability';
 const WEATHER_TABLE = 'weather';
+const APEX_GAME_TABLE = 'apex_game';
+const APEX_GAME_STATS_TABLE = 'apex_game_stats';
 
 async function getLuldollars() {
   return await wrapTransaction(async (db) => {
@@ -96,6 +98,24 @@ async function insertGameUpdate(gameId, updateId) {
   });
 }
 
+async function getNickname(nickname) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT * FROM ${NICKNAME_TABLE} WHERE nickname = ${db.escape(nickname)}`).then(nickname => nickname.shift());
+  });
+}
+
+async function getPreferredNickname(userId) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT * FROM ${NICKNAME_TABLE} WHERE user_id = ${db.escape(userId)} AND preferred = 1`).then(nickname => nickname.shift());
+  });
+}
+
+async function getPreferredNicknames() {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT * FROM ${NICKNAME_TABLE} WHERE preferred = 1`);
+  });
+}
+
 async function getNicknames() {
   return await wrapTransaction(async (db) => {
     return await db.query(`SELECT * FROM ${NICKNAME_TABLE}`);
@@ -141,6 +161,30 @@ async function getWeatherDataForDiscordUser(discordUserId) {
   });
 }
 
+async function insertApexGame(place, totalKills) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`INSERT INTO ${APEX_GAME_TABLE} (place, total_kills) VALUES (${db.escape(place)}, ${db.escape(totalKills)})`);
+  });
+}
+
+async function getApexGame(id) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT * FROM ${APEX_GAME_TABLE} WHERE id = ${id}`).then(game => game.shift());
+  });
+}
+
+async function insertApexGameStats(userId, apexGameId, kills, damageDealt, survivalTime, reviveGiven, respawnGiven) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`INSERT INTO ${APEX_GAME_STATS_TABLE} (user_id, apex_game_id, kills, damage_dealt, survival_time, revive_given, respawn_given) VALUES (${db.escape(userId)}, ${db.escape(apexGameId)}, ${db.escape(kills)}, ${db.escape(damageDealt)}, ${db.escape(survivalTime)}, ${db.escape(reviveGiven)}, ${db.escape(respawnGiven)})`);
+  });
+}
+
+async function getApexGameStatsForGame(apexGameId) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT * FROM ${APEX_GAME_STATS_TABLE} WHERE apex_game_id = ${db.escape(apexGameId)}`);
+  });
+}
+
 async function wrapTransaction(callback) {
   const db = await mysql.createConnection(dbConnection);
 
@@ -154,30 +198,36 @@ async function wrapTransaction(callback) {
     return result;
   } catch(e) {
     db.end();
-    // console.log(e);
     throw(e);
   }
 }
 
 module.exports = {
-  getLuldollars: getLuldollars,
-  getSteamGame: getSteamGame,
-  getUser: getUser,
-  getSubscription: getSubscription,
-  insertSubscription: insertSubscription,
-  deleteSubscription: deleteSubscription,
-  insertGame: insertGame,
-  insertLuldollar: insertLuldollar,
-  deleteLuldollar: deleteLuldollar,
-  getPlayableGames: getPlayableGames,
-  getUsersSubscribedToGame: getUsersSubscribedToGame,
-  getGameUpdates: getGameUpdates,
-  insertGameUpdate: insertGameUpdate,
-  getNicknames: getNicknames,
-  getUserById: getUserById,
-  insertAvailability: insertAvailability,
-  getFutureAvailabilities: getFutureAvailabilities,
-  getAvailabileGamersForToday: getAvailabileGamersForToday,
-  getAllWeatherData: getAllWeatherData,
-  getWeatherDataForDiscordUser: getWeatherDataForDiscordUser
+  getLuldollars,
+  getSteamGame,
+  getUser,
+  getSubscription,
+  insertSubscription,
+  deleteSubscription,
+  insertGame,
+  insertLuldollar,
+  deleteLuldollar,
+  getPlayableGames,
+  getUsersSubscribedToGame,
+  getGameUpdates,
+  insertGameUpdate,
+  getNicknames,
+  getNickname,
+  getPreferredNickname,
+  getPreferredNicknames,
+  getUserById,
+  insertAvailability,
+  getFutureAvailabilities,
+  getAvailabileGamersForToday,
+  getAllWeatherData,
+  getWeatherDataForDiscordUser,
+  insertApexGame,
+  getApexGame,
+  insertApexGameStats,
+  getApexGameStatsForGame
 };
