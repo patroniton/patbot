@@ -2,6 +2,7 @@
 node_modules/*
 env.js
 token.js
+apex_game_screenshots/*
 
 # vscode specific
 .vscode/*
