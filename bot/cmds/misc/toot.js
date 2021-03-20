@@ -15,24 +15,24 @@ module.exports = class Toot extends Commando.Command {
 
   async run(message, args) {
     try {
-      if (message.author.id !== LULDOLLAR_USER_ID) {
-        message.channel.send('Only those worthy of the toot may use this command.');
-        return;
-      }
+      // if (message.author.id !== LULDOLLAR_USER_ID) {
+      //   message.channel.send('Only those worthy of the toot may use this command.');
+      //   return;
+      // }
 
-      const gamers = await DatabaseResources.getAvailabileGamersForToday();
+      // const gamers = await DatabaseResources.getAvailabileGamersForToday();
 
-      let reply = 'The horn of games has been tooted! **ALL GAMERS ASSEMBLE!**\n';
+      // let reply = 'The horn of games has been tooted! **ALL GAMERS ASSEMBLE!**\n';
 
-      // let reply = [
-      //   'The horn of games has been tooted! ALL GAMERS ASSEMBLE!',
-      // ].random();
+      // // let reply = [
+      // //   'The horn of games has been tooted! ALL GAMERS ASSEMBLE!',
+      // // ].random();
 
-      for (let gamer of gamers) {
-        reply += `<@${gamer.d_user_id}> `;
-      }
+      // for (let gamer of gamers) {
+      //   reply += `<@${gamer.d_user_id}> `;
+      // }
 
-      message.channel.send(reply);
+      // message.channel.send(reply);
     } catch (e) {
       console.log(e);
       message.channel.send('Sorry, something went wrong.');

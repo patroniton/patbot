@@ -84,9 +84,9 @@ async function giveRandomDrop(message) {
     return;
   }
 
-  DatabaseResources.insertRandomDrop(user.id, getMessageLink(message), drop);
+  await DatabaseResources.insertRandomDrop(user.id, getMessageLink(message), drop.chance, drop.emoji);
 
-  message.react(drop);
+  message.react(drop.emoji);
 }
 
 function getMessageLink(message) {

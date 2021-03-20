@@ -43,6 +43,12 @@ async function getUserById(id) {
   });
 }
 
+async function getUserByNickname(nickname) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT ${USER_TABLE}.* FROM ${USER_TABLE} JOIN ${NICKNAME_TABLE} ON ${NICKNAME_TABLE}.user_id = ${USER_TABLE}.id WHERE nickname = ${db.escape(nickname)}`).then(user => user.shift());
+  });
+}
+
 async function getSubscription(gameId, userId) {
   return await wrapTransaction(async (db) => {
     return await db.query(`SELECT * FROM ${USER_GAME_SUBSCRIPTION_TABLE} WHERE game_id = ${db.escape(gameId)} AND user_id = ${db.escape(userId)}`).then(sub => sub.shift());
@@ -142,9 +148,15 @@ async function getWeatherDataForDiscordUser(discordUserId) {
   });
 }
 
-async function insertRandomDrop(userId, messageLink, drop) {
+async function insertRandomDrop(userId, messageLink, drop, emoji) {
   return await wrapTransaction(async (db) => {
-    return await db.query(`INSERT INTO ${RANDOM_DROP_TABLE} (user_id, discord_message_link, \`drop\`) VALUES (${db.escape(userId)}, ${db.escape(messageLink)}, ${db.escape(drop)})`);
+    return await db.query(`INSERT INTO ${RANDOM_DROP_TABLE} (user_id, discord_message_link, \`drop\`, emoji) VALUES (${db.escape(userId)}, ${db.escape(messageLink)}, ${db.escape(drop)}, ${db.escape(emoji)})`);
+  });
+}
+
+async function getDropsForUser(userId) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT \`drop\`, COUNT(*) as \`amount\` FROM ${RANDOM_DROP_TABLE} WHERE user_id = ${userId} GROUP BY \`drop\``);
   });
 }
 
@@ -170,6 +182,7 @@ module.exports = {
   getLuldollars,
   getSteamGame,
   getUser,
+  getUserByNickname,
   getSubscription,
   insertSubscription,
   deleteSubscription,
@@ -187,5 +200,6 @@ module.exports = {
   getAvailabileGamersForToday,
   getAllWeatherData,
   getWeatherDataForDiscordUser,
-  insertRandomDrop
+  insertRandomDrop,
+  getDropsForUser
 };
