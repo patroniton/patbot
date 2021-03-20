@@ -20,7 +20,7 @@ function getRandomDrop(message) {
   // last message was less than 5 minutes ago, so user is not eligile for another drop
   if (moment.duration(moment().diff(lastMessageTime)).asSeconds() < SECONDS_BETWEEN_DROP_CHANCES) {
     console.log('rate limit on drops');
-    return;
+    // return;
   }
 
   userIds[discordUserId] = moment();
@@ -32,6 +32,15 @@ function getDrop() {
   const million = Math.floor(Math.random() * 1000000);
   const hundredThousand = Math.floor(Math.random() * 100000);
   const thousand = Math.floor(Math.random() * 1000);
+
+  // FOR TESTING
+  // const million = Math.floor(Math.random() * 10);
+  // const hundredThousand = Math.floor(Math.random() * 5);
+  // const thousand = Math.floor(Math.random() * 3);
+
+  // console.log(`million: ${million}`);
+  // console.log(`hundredThousand: ${hundredThousand}`);
+  // console.log(`thousand: ${thousand}`);
 
   if (million === 0) {
     return ONE_MILLION_DROP;
