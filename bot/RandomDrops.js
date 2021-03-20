@@ -19,8 +19,7 @@ function getRandomDrop(message) {
 
   // last message was less than 5 minutes ago, so user is not eligile for another drop
   if (moment.duration(moment().diff(lastMessageTime)).asSeconds() < SECONDS_BETWEEN_DROP_CHANCES) {
-    console.log('rate limit on drops');
-    // return;
+    return;
   }
 
   userIds[discordUserId] = moment();
