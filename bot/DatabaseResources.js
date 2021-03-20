@@ -11,6 +11,7 @@ const LULDOLLAR_TABLE = 'luldollar';
 const NICKNAME_TABLE = 'user_nickname';
 const AVAILABILITY_TABLE = 'user_availability';
 const WEATHER_TABLE = 'weather';
+const RANDOM_DROP_TABLE = 'random_drop';
 
 async function getLuldollars() {
   return await wrapTransaction(async (db) => {
@@ -141,6 +142,12 @@ async function getWeatherDataForDiscordUser(discordUserId) {
   });
 }
 
+async function insertRandomDrop(userId, messageLink, drop) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`INSERT INTO ${RANDOM_DROP_TABLE} (user_id, discord_message_link, \`drop\`) VALUES (${db.escape(userId)}, ${db.escape(messageLink)}, ${db.escape(drop)})`);
+  });
+}
+
 async function wrapTransaction(callback) {
   const db = await mysql.createConnection(dbConnection);
 
@@ -160,24 +167,25 @@ async function wrapTransaction(callback) {
 }
 
 module.exports = {
-  getLuldollars: getLuldollars,
-  getSteamGame: getSteamGame,
-  getUser: getUser,
-  getSubscription: getSubscription,
-  insertSubscription: insertSubscription,
-  deleteSubscription: deleteSubscription,
-  insertGame: insertGame,
-  insertLuldollar: insertLuldollar,
-  deleteLuldollar: deleteLuldollar,
-  getPlayableGames: getPlayableGames,
-  getUsersSubscribedToGame: getUsersSubscribedToGame,
-  getGameUpdates: getGameUpdates,
-  insertGameUpdate: insertGameUpdate,
-  getNicknames: getNicknames,
-  getUserById: getUserById,
-  insertAvailability: insertAvailability,
-  getFutureAvailabilities: getFutureAvailabilities,
-  getAvailabileGamersForToday: getAvailabileGamersForToday,
-  getAllWeatherData: getAllWeatherData,
-  getWeatherDataForDiscordUser: getWeatherDataForDiscordUser
+  getLuldollars,
+  getSteamGame,
+  getUser,
+  getSubscription,
+  insertSubscription,
+  deleteSubscription,
+  insertGame,
+  insertLuldollar,
+  deleteLuldollar,
+  getPlayableGames,
+  getUsersSubscribedToGame,
+  getGameUpdates,
+  insertGameUpdate,
+  getNicknames,
+  getUserById,
+  insertAvailability,
+  getFutureAvailabilities,
+  getAvailabileGamersForToday,
+  getAllWeatherData,
+  getWeatherDataForDiscordUser,
+  insertRandomDrop
 };
