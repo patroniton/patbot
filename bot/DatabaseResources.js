@@ -11,6 +11,7 @@ const LULDOLLAR_TABLE = 'luldollar';
 const NICKNAME_TABLE = 'user_nickname';
 const AVAILABILITY_TABLE = 'user_availability';
 const WEATHER_TABLE = 'weather';
+const RANDOM_DROP_TABLE = 'random_drop';
 
 async function getLuldollars() {
   return await wrapTransaction(async (db) => {
@@ -39,6 +40,12 @@ async function getUser(discordUserId) {
 async function getUserById(id) {
   return await wrapTransaction(async (db) => {
     return await db.query(`SELECT * FROM ${USER_TABLE} WHERE id = ${db.escape(id)}`).then(user => user.shift());
+  });
+}
+
+async function getUserByNickname(nickname) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT ${USER_TABLE}.* FROM ${USER_TABLE} JOIN ${NICKNAME_TABLE} ON ${NICKNAME_TABLE}.user_id = ${USER_TABLE}.id WHERE nickname = ${db.escape(nickname)}`).then(user => user.shift());
   });
 }
 
@@ -141,6 +148,18 @@ async function getWeatherDataForDiscordUser(discordUserId) {
   });
 }
 
+async function insertRandomDrop(userId, messageLink, drop, emoji) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`INSERT INTO ${RANDOM_DROP_TABLE} (user_id, discord_message_link, \`drop\`, emoji) VALUES (${db.escape(userId)}, ${db.escape(messageLink)}, ${db.escape(drop)}, ${db.escape(emoji)})`);
+  });
+}
+
+async function getDropsForUser(userId) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT \`drop\`, COUNT(*) as \`amount\` FROM ${RANDOM_DROP_TABLE} WHERE user_id = ${userId} GROUP BY \`drop\``);
+  });
+}
+
 async function wrapTransaction(callback) {
   const db = await mysql.createConnection(dbConnection);
 
@@ -160,24 +179,27 @@ async function wrapTransaction(callback) {
 }
 
 module.exports = {
-  getLuldollars: getLuldollars,
-  getSteamGame: getSteamGame,
-  getUser: getUser,
-  getSubscription: getSubscription,
-  insertSubscription: insertSubscription,
-  deleteSubscription: deleteSubscription,
-  insertGame: insertGame,
-  insertLuldollar: insertLuldollar,
-  deleteLuldollar: deleteLuldollar,
-  getPlayableGames: getPlayableGames,
-  getUsersSubscribedToGame: getUsersSubscribedToGame,
-  getGameUpdates: getGameUpdates,
-  insertGameUpdate: insertGameUpdate,
-  getNicknames: getNicknames,
-  getUserById: getUserById,
-  insertAvailability: insertAvailability,
-  getFutureAvailabilities: getFutureAvailabilities,
-  getAvailabileGamersForToday: getAvailabileGamersForToday,
-  getAllWeatherData: getAllWeatherData,
-  getWeatherDataForDiscordUser: getWeatherDataForDiscordUser
+  getLuldollars,
+  getSteamGame,
+  getUser,
+  getUserByNickname,
+  getSubscription,
+  insertSubscription,
+  deleteSubscription,
+  insertGame,
+  insertLuldollar,
+  deleteLuldollar,
+  getPlayableGames,
+  getUsersSubscribedToGame,
+  getGameUpdates,
+  insertGameUpdate,
+  getNicknames,
+  getUserById,
+  insertAvailability,
+  getFutureAvailabilities,
+  getAvailabileGamersForToday,
+  getAllWeatherData,
+  getWeatherDataForDiscordUser,
+  insertRandomDrop,
+  getDropsForUser
 };

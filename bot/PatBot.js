@@ -5,6 +5,7 @@ const SteamResources = require('./SteamResources.js');
 const DatabaseResources = require('./DatabaseResources.js');
 const ArkhamResources = require('./ArkhamResources.js');
 const MusicPlayer = require('./MusicPlayer.js');
+const MessageHandler = require('./MessageHandler.js');
 
 const Commando = require('discord.js-commando');
 const client = new Commando.CommandoClient({
@@ -16,7 +17,6 @@ const constants = require('./../env');
 const GAME_UPDATE_CHANNEL_ID = constants[constants.env].discord_ids.game_update_channel_id;
 const LULDOLLAR_USER_ID = constants[constants.env].discord_ids.luldollar_user_id;
 const LULDOLLAR_EMOJI_ID = constants[constants.env].discord_ids.luldollar_emoji_id;
-const GROOVY_BOT_ID = constants[constants.env].discord_ids.groovy_bot_id;
 
 const GAME_CHECK_INTERVAL = 1000 * 60 * 5; // 5 minutes
 
@@ -102,70 +102,7 @@ function registerEvents() {
     }
   });
 
-  client.on('message', async (message) => {
-    relayMessageToPat(message);
-
-    deleteGroovyMessages(message);
-    deleteMusicPlayerMessages(message);
-  });
-}
-
-async function relayMessageToPat(message) {
-  // relay mention directed at the bot towards pat
-  const pat = await DatabaseResources.getUserById(1);
-  let shouldReply = false;
-
-  for (let user of message.mentions.users) {
-    if (user[0] === pat.d_user_id) {
-      return;
-    }
-
-    if (user[0] === client.user.id) {
-      shouldReply = true;
-    }
-  }
-
-  if (shouldReply) {
-    message.channel.send(`You probably meant to mention <@${pat.d_user_id}>`);
-  }
-}
-
-function deleteGroovyMessages(message) {
-  const groovyCommandsToDelete = ['play', 'remove', 'prev', 'previous', 'next', 'song', 'skip', 'queue', 'back', 'clear', 'loop', 'jump', 'pause', 'stop', 'resume', 'join', '-seek', 'rewind', 'fastforward', 'move'];
-  let isGroovyCommand = false;
-
-  if (message.content.startsWith('-')) {
-    const command = message.content.split('-')[1].split(' ')[0];
-
-    if (groovyCommandsToDelete.includes(command.toLowerCase())) {
-      isGroovyCommand = true;
-    }
-  }
-
-  if (message.author.id !== GROOVY_BOT_ID && !isGroovyCommand) {
-    return;
-  }
-
-  message.react(['🌋', '💥', '💀', '☠️', '⚔️', '🗡️', '🩸', '🔫'].random());
-  message.delete({ timeout: 1000 * 60 });
-}
-
-function deleteMusicPlayerMessages(message) {
-  const commandsToDelete = ['musicoptions', 'play', 'remove', 'previous', 'next', 'song', 'skip', 'queue', 'back', 'clear', 'loop', 'jump', 'pause', 'stop', 'resume', 'join', '-seek', 'rewind', 'fastforward', 'move'];
-  let isCommand = false;
-
-  if (message.content.startsWith('!')) {
-    const command = message.content.split('!')[1].split(' ')[0];
-
-    if (commandsToDelete.includes(command.toLowerCase())) {
-      isCommand = true;
-    }
-  }
-
-  if (isCommand) {
-    message.react(['🌋', '💥', '💀', '☠️', '⚔️', '🗡️', '🩸', '🔫'].random());
-    message.delete({ timeout: 1000 * 60 });
-  }
+  client.on('message', async message => MessageHandler.handleMessage(message));
 }
 
 async function handleGalleryReaction(messageReaction, user) {
