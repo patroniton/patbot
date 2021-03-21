@@ -23,7 +23,7 @@ async function relayMessageToPat(message) {
       return;
     }
 
-    if (user[0] === client.user.id) {
+    if (user[0] === constants[constants.env].discord_ids.patbot_id) {
       shouldReply = true;
     }
   }
@@ -84,7 +84,7 @@ async function giveRandomDrop(message) {
     return;
   }
 
-  await DatabaseResources.insertRandomDrop(user.id, getMessageLink(message), drop.chance, drop.emoji);
+  DatabaseResources.insertRandomDrop(user.id, getMessageLink(message), drop.chance);
 
   message.react(drop.emoji);
 }

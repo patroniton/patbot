@@ -148,9 +148,9 @@ async function getWeatherDataForDiscordUser(discordUserId) {
   });
 }
 
-async function insertRandomDrop(userId, messageLink, drop, emoji) {
+async function insertRandomDrop(userId, messageLink, drop) {
   return await wrapTransaction(async (db) => {
-    return await db.query(`INSERT INTO ${RANDOM_DROP_TABLE} (user_id, discord_message_link, \`drop\`, emoji) VALUES (${db.escape(userId)}, ${db.escape(messageLink)}, ${db.escape(drop)}, ${db.escape(emoji)})`);
+    return await db.query(`INSERT INTO ${RANDOM_DROP_TABLE} (user_id, discord_message_link, \`drop\`) VALUES (${db.escape(userId)}, ${db.escape(messageLink)}, ${db.escape(drop)})`);
   });
 }
 

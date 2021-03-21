@@ -31,7 +31,8 @@ module.exports = class Uptime extends Commando.Command {
       let dropAmount = {
         million: 0,
         hundred_thousand: 0,
-        thousand: 0
+        thousand: 0,
+        hundred: 0,
       }
 
       for (let drop of drops) {
@@ -41,8 +42,9 @@ module.exports = class Uptime extends Commando.Command {
       // million = '👑';
       // hundredThousand = '💎';
       // thousand = '🏆';
+      // hundred = '🧀';
 
-      let reply = `👑 - ${dropAmount.million}\n💎 - ${dropAmount.hundred_thousand}\n🏆 - ${dropAmount.thousand}`;
+      let reply = `👑 - ${dropAmount.million}\n💎 - ${dropAmount.hundred_thousand}\n🏆 - ${dropAmount.thousand}\n🧀 - ${dropAmount.hundred}`;
 
       message.channel.send(reply);
     } catch (e) {

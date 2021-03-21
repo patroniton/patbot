@@ -18,3 +18,11 @@ ADD COLUMN `discord_message_link` TEXT NOT NULL AFTER `user_id`;
 
 ALTER TABLE `random_drop` 
 ADD COLUMN `emoji` VARCHAR(45) NOT NULL AFTER `drop`;
+
+ALTER DATABASE patbot_dev CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+ALTER DATABASE patbot CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+ALTER TABLE patbot.random_drop CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE patbot_dev.random_drop CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+ALTER TABLE `random_drop` 
+CHANGE COLUMN `emoji` `emoji` VARCHAR(45) NULL DEFAULT NULL ;
