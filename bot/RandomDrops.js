@@ -40,10 +40,10 @@ function getDrop() {
   // const thousand = Math.floor(Math.random() * 3);
   // const hundred = Math.floor(Math.random() * 2);
 
-  // console.log(`million: ${million}`);
-  // console.log(`hundredThousand: ${hundredThousand}`);
-  // console.log(`thousand: ${thousand}`);
-  // console.log(`hundred: ${hundred}`);
+  console.log(`million: ${million}`);
+  console.log(`hundredThousand: ${hundredThousand}`);
+  console.log(`thousand: ${thousand}`);
+  console.log(`hundred: ${hundred}`);
 
   if (million === 0) {
     return ONE_MILLION_DROP;
