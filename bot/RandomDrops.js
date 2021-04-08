@@ -4,7 +4,7 @@ const ONE_MILLION_DROP = {chance: 'million', emoji: '👑'};
 const ONE_HUNDRED_THOUSAND_DROP = {chance: 'hundred_thousand', emoji: '💎'};
 const ONE_THOUSAND_DROP = {chance: 'thousand', emoji: '🏆'};
 const ONE_HUNDRED_DROP = {chance: 'hundred', emoji: '🧀'};
-const SECONDS_BETWEEN_DROP_CHANCES = 10;
+const SECONDS_BETWEEN_DROP_CHANCES = 2;
 
 let userIds = {};
 
