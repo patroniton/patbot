@@ -160,6 +160,12 @@ async function getDropsForUser(userId) {
   });
 }
 
+async function getUserByDiscordId(discordUserId) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT * FROM user WHERE d_user_id = ${db.escape(discordUserId)}`).then(user => user.shift());
+  });
+}
+
 async function wrapTransaction(callback) {
   const db = await mysql.createConnection(dbConnection);
 
@@ -201,5 +207,6 @@ module.exports = {
   getAllWeatherData,
   getWeatherDataForDiscordUser,
   insertRandomDrop,
-  getDropsForUser
+  getDropsForUser,
+  getUserByDiscordId
 };

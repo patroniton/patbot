@@ -4,28 +4,54 @@ const ONE_MILLION_DROP = {chance: 'million', emoji: '👑'};
 const ONE_HUNDRED_THOUSAND_DROP = {chance: 'hundred_thousand', emoji: '💎'};
 const ONE_THOUSAND_DROP = {chance: 'thousand', emoji: '🏆'};
 const ONE_HUNDRED_DROP = {chance: 'hundred', emoji: '🧀'};
-const SECONDS_BETWEEN_DROP_CHANCES = 2;
+const SECONDS_BETWEEN_MESSAGE_DROP_CHANCES = 2;
+const MINUTES_BETWEEN_VOICE_DROP_CHANCES = 2;
 
-let userIds = {};
+let userMessageCooldown = {};
+let userVoiceCooldown = {};
 
-function getRandomDrop(message) {
+function getRandomMessageDrop(message) {
   const discordUserId = message.author.id;
 
+  return userCanReceiveMessageDrops(discordUserId) ? getDrop() : null;
+}
+
+function getRandomVoiceDrop(discordUserId) {
+  return userCanReceiveVoiceDrops(discordUserId) ? getDrop() : null;
+}
+
+function userCanReceiveMessageDrops(discordUserId) {
   // add the user if they're currently not being tracked.
-  if (!userIds[discordUserId]) {
-    userIds[discordUserId] = moment();
+  if (!userMessageCooldown[discordUserId]) {
+    userMessageCooldown[discordUserId] = moment();
   }
 
-  const lastMessageTime = userIds[discordUserId];
+  const lastMessageTime = userMessageCooldown[discordUserId];
 
   // last message was less than 30 seconds ago, so user is not eligile for another drop
-  if (moment.duration(moment().diff(lastMessageTime)).asSeconds() < SECONDS_BETWEEN_DROP_CHANCES) {
-    return;
+  if (moment.duration(moment().diff(lastMessageTime)).asSeconds() < SECONDS_BETWEEN_MESSAGE_DROP_CHANCES) {
+    return false;
   }
 
-  userIds[discordUserId] = moment();
+  userMessageCooldown[discordUserId] = moment();
+  return true;
+}
 
-  return getDrop();
+// TODO: very similar to message drops, need to figure out a way to combine
+function userCanReceiveVoiceDrops(discordUserId) {
+  // add the user if they're currently not being tracked.
+  if (!userVoiceCooldown[discordUserId]) {
+    userVoiceCooldown[discordUserId] = moment();
+  }
+
+  const lastVoiceDropChance = userVoiceCooldown[discordUserId];
+
+  if (moment.duration(moment().diff(lastVoiceDropChance)).asMinutes() < MINUTES_BETWEEN_VOICE_DROP_CHANCES) {
+    return false;
+  }
+
+  userVoiceCooldown[discordUserId] = moment();
+  return true;
 }
 
 function getDrop() {
@@ -62,5 +88,6 @@ function getDrop() {
 }
 
 module.exports = {
-  getRandomDrop
+  getRandomMessageDrop: getRandomMessageDrop,
+  getRandomVoiceDrop: getRandomVoiceDrop
 };

@@ -1,5 +1,5 @@
 const DatabaseResources = require("./DatabaseResources");
-const { getRandomDrop } = require("./RandomDrops");
+const { getRandomMessageDrop } = require("./RandomDrops");
 
 const constants = require('./../env');
 const GROOVY_BOT_ID = constants[constants.env].discord_ids.groovy_bot_id;
@@ -72,7 +72,7 @@ async function deleteMusicPlayerMessages(message) {
 }
 
 async function giveRandomDrop(message) {
-  const drop = getRandomDrop(message);
+  const drop = getRandomMessageDrop(message);
 
   if (!drop) {
     return;
