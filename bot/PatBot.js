@@ -6,6 +6,7 @@ const DatabaseResources = require('./DatabaseResources.js');
 const ArkhamResources = require('./ArkhamResources.js');
 const MusicPlayer = require('./MusicPlayer.js');
 const MessageHandler = require('./MessageHandler.js');
+const { getRandomVoiceDrop } = require("./RandomDrops");
 
 const Commando = require('discord.js-commando');
 const client = new Commando.CommandoClient({
@@ -17,12 +18,20 @@ const constants = require('./../env');
 const GAME_UPDATE_CHANNEL_ID = constants[constants.env].discord_ids.game_update_channel_id;
 const LULDOLLAR_USER_ID = constants[constants.env].discord_ids.luldollar_user_id;
 const LULDOLLAR_EMOJI_ID = constants[constants.env].discord_ids.luldollar_emoji_id;
+const GENERAL_CHANNEL_ID = constants[constants.env].discord_ids.general_channel_id;
 
 const GAME_CHECK_INTERVAL = 1000 * 60 * 5; // 5 minutes
+const VOICE_DROP_INTERVAL = 1000 * 61 * 2; // 2 minutes (added 2 seconds due to double timers in PatBot & in RandomDrop)
 
 let activeGalleries = {
   arkham: false
 };
+
+function login(token) {
+  client.login(token);
+
+  init();
+}
 
 function init() {
   // this is to solve needing data persisted through the bot (but without using a database)
@@ -32,12 +41,6 @@ function init() {
   client.patbot.musicPlayer = new MusicPlayer(client);
 
   registerEvents();
-}
-
-function login(token) {
-  client.login(token);
-
-  init();
 }
 
 function registerEvents() {
@@ -68,6 +71,7 @@ function registerEvents() {
 
     checkForGameUpdates();
     setInterval(checkForGameUpdates, GAME_CHECK_INTERVAL);
+    setInterval(giveVoiceDrops, VOICE_DROP_INTERVAL);
   });
 
   client.on('messageReactionAdd', async (messageReaction, user) => {
@@ -206,6 +210,45 @@ async function checkForGameUpdates() {
     }
 
     client.channels.cache.get(GAME_UPDATE_CHANNEL_ID).send(updateMessage);
+  }
+}
+
+async function giveVoiceDrops() {
+  const voiceChannels = client.guilds.cache.first().channels.cache.filter(channel => channel.type === 'voice');
+  const generalChannel = client.guilds.cache.first().channels.cache.filter(channel => channel.id === GENERAL_CHANNEL_ID).first();
+
+  const messageResponses = [
+    "While sitting in the voice channel @USER@ found a @EMOJI@!",
+    "@USER@ randomly looked around on the floor and found a @EMOJI@! Who dropped that?",
+    "Hey @USER@! Did you drop this? @EMOJI@",
+    "Can we get some love for @USER@ who just found a @EMOJI@???",
+    "What are the odds? @USER@ just stumbled across a @EMOJI@!",
+    "Pssssttt.. hey... hey @USER@.. take this @EMOJI@ while no one is looking",
+    "Just gonna sliiiide this @EMOJI@ on into @USER@'s pocket",
+    "A random @EMOJI@ flew out of the air and hit @USER@ in the face! Unlucky!.. or is it?"
+  ];
+
+  for (const [id, voiceChannel] of voiceChannels) {
+    let usersInVoice = voiceChannel.members.filter(member => !member.user.bot);
+
+    // only allow drops when multiple users in voice - otherwise could afk
+    if (usersInVoice.size > 1) {
+      for (const [id, user] of usersInVoice) {
+        let drop = getRandomVoiceDrop(user.user.id);
+
+        if (drop !== null) {
+          let message = messageResponses.random().replace('@USER@', `<@${user.user.id}>`).replace('@EMOJI@', drop.emoji);
+          
+          let dbUser = await DatabaseResources.getUserByDiscordId(user.user.id);
+
+          if (dbUser) {
+            generalChannel.send(message).then(sent => {
+              DatabaseResources.insertRandomDrop(dbUser.id, sent.url, drop.chance)
+            });
+          }
+        }
+      }
+    }
   }
 }
 
