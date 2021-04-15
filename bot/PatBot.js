@@ -214,8 +214,6 @@ async function checkForGameUpdates() {
 }
 
 async function giveVoiceDrops() {
-  console.log('GUILDS ON PROD');
-  console.log(client.guilds.cache);
   const voiceChannels = client.guilds.cache.first().channels.cache.filter(channel => channel.type === 'voice');
   const generalChannel = client.guilds.cache.first().channels.cache.filter(channel => channel.id === GENERAL_CHANNEL_ID).first();
 
