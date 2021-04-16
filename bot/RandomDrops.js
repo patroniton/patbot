@@ -5,7 +5,7 @@ const ONE_HUNDRED_THOUSAND_DROP = {chance: 'hundred_thousand', emoji: '💎'};
 const ONE_THOUSAND_DROP = {chance: 'thousand', emoji: '🏆'};
 const ONE_HUNDRED_DROP = {chance: 'hundred', emoji: '🧀'};
 const SECONDS_BETWEEN_MESSAGE_DROP_CHANCES = 2;
-const MINUTES_BETWEEN_VOICE_DROP_CHANCES = 2;
+const MINUTES_BETWEEN_VOICE_DROP_CHANCES = 5;
 
 let userMessageCooldown = {};
 let userVoiceCooldown = {};

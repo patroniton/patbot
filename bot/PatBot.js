@@ -21,7 +21,7 @@ const LULDOLLAR_EMOJI_ID = constants[constants.env].discord_ids.luldollar_emoji_
 const GENERAL_CHANNEL_ID = constants[constants.env].discord_ids.general_channel_id;
 
 const GAME_CHECK_INTERVAL = 1000 * 60 * 5; // 5 minutes
-const VOICE_DROP_INTERVAL = 1000 * 61 * 2; // 2 minutes (added 2 seconds due to double timers in PatBot & in RandomDrop)
+const VOICE_DROP_INTERVAL = (1000 * 60 * 5) + 1; // 5 minutes (added 2 seconds due to double timers in PatBot & in RandomDrop)
 
 let activeGalleries = {
   arkham: false
