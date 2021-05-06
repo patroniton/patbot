@@ -232,7 +232,7 @@ async function giveVoiceDrops() {
     let usersInVoice = voiceChannel.members.filter(member => !member.user.bot);
 
     // only allow drops when multiple users in voice - otherwise could afk
-    if (usersInVoice.size > 1) {
+    if (usersInVoice.size > 2) {
       for (const [id, user] of usersInVoice) {
         let drop = getRandomVoiceDrop(user.user.id);
 
