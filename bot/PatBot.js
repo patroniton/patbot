@@ -217,6 +217,7 @@ async function giveVoiceDrops() {
   const voiceChannels = client.guilds.cache.first().channels.cache.filter(channel => channel.type === 'voice');
   const generalChannel = client.guilds.cache.first().channels.cache.filter(channel => channel.id === GENERAL_CHANNEL_ID).first();
 
+  // TODO: move messages into the random drop logic so that it can use custom responses based on what happened
   const messageResponses = [
     "While sitting in the voice channel @USER@ found a @EMOJI@!",
     "@USER@ randomly looked around on the floor and found a @EMOJI@! Who dropped that?",
@@ -225,7 +226,15 @@ async function giveVoiceDrops() {
     "What are the odds? @USER@ just stumbled across a @EMOJI@!",
     "Pssssttt.. hey... hey @USER@.. take this @EMOJI@ while no one is looking",
     "Just gonna sliiiide this @EMOJI@ on into @USER@'s pocket",
-    "A random @EMOJI@ flew out of the air and hit @USER@ in the face! Unlucky!.. or is it?"
+    "A random @EMOJI@ flew out of the air and hit @USER@ in the face! Unlucky!.. or is it?",
+    "WHOA! @USER@ just headshot a bird carrying a @EMOJI@! 🐦🔫",
+    "@USER@ saw something shiny out of the corner of their eye... looks like it's a @EMOJI@!",
+    "Greed is good, so take this @EMOJI@ @USER@.",
+    "It's dangerous to go alone! Take this @EMOJI@ @USER@",
+    "I'm feeling generous - take this @EMOJI@ @USER@. Don't spend it all in one place, unless it's on blackjack and hookers.",
+    "SOMEONE GET @USER@ A @EMOJI@ PRONTO!",
+    "Hmm.. must be a glitch in the system, because @USER@ just found something they weren't supposed to.. a @EMOJI@!",
+    "HEY! HEY GET BACK HERE! @USER@ just stole a @EMOJI@ from the vault. Bastard."
   ];
 
   for (const [id, voiceChannel] of voiceChannels) {
@@ -243,7 +252,7 @@ async function giveVoiceDrops() {
 
           if (dbUser) {
             generalChannel.send(message).then(sent => {
-              DatabaseResources.insertRandomDrop(dbUser.id, sent.url, drop.chance)
+              DatabaseResources.insertRandomDrop(dbUser.id, drop.id, sent.url);
             });
           }
         }
