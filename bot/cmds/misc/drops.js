@@ -7,44 +7,55 @@ module.exports = class Uptime extends Commando.Command {
       name: 'drops',
       group: 'misc',
       memberName: 'drops',
-      description: 'Lists the drops received for the user. Use !drops {nickname} to view another users drops'
+      description: 'Shows random drops for all the users in the channel that have received them.'
     });
   }
 
   async run(message, args) {
     try {
-      let user = null;
+      const drops = await DatabaseResources.getRandomDrops();
+      const dropTypes = await DatabaseResources.getRandomDropTypes();
+      const users = await DatabaseResources.getUsersWithDrops();
 
-      if (args.length > 0) {
-        user = await DatabaseResources.getUserByNickname(args);
-      } else {
-        user = await DatabaseResources.getUser(message.author.id);
+      const longestName = users.sort((a, b) => b.name.length - a.name.length)[0].name.length + 1;
+
+      let reply = '';
+      reply += '`'.padEnd(longestName, ' ') + ' |';
+
+      for (let dropType of dropTypes) {
+        reply += ` ${dropType.emoji} |`
       }
 
-      if (!user) {
-        message.channel.send("Sorry, looks like you aren't listed in the database yet.");
-        return;
+      reply += '\n';
+
+      for (let user of users) {
+        reply += `${user.name.padEnd(longestName, ' ')}| `
+
+        for (let dropType of dropTypes) {
+          let userDrop = drops.find((drop) => {
+            return drop.user_id === user.id && drop.emoji === dropType.emoji;
+          });
+
+          // no drops for this user for this drop, display 0
+          if (!userDrop) {
+            reply += '  0 ';
+          } else {
+            reply += (userDrop.amount).toString().padStart(3, ' ').padEnd(4, ' ');
+          }
+
+          // emojis are not monospaced, trophy provides a good breakpoint
+          // to add another space to make the table look a bit better
+          if (dropType.emoji === '💸') {
+            reply += ' ';
+          }
+
+          reply += '|';
+        }
+
+        reply += '\n';
       }
 
-      const drops = await DatabaseResources.getDropsForUser(user.id);
-
-      let dropAmount = {
-        million: 0,
-        hundred_thousand: 0,
-        thousand: 0,
-        hundred: 0,
-      }
-
-      for (let drop of drops) {
-        dropAmount[drop.drop] = drop.amount;
-      }
-
-      // million = '👑';
-      // hundredThousand = '💎';
-      // thousand = '🏆';
-      // hundred = '🧀';
-
-      let reply = `👑 - ${dropAmount.million}\n💎 - ${dropAmount.hundred_thousand}\n🏆 - ${dropAmount.thousand}\n🧀 - ${dropAmount.hundred}`;
+      reply += '`';
 
       message.channel.send(reply);
     } catch (e) {

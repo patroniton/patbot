@@ -84,13 +84,9 @@ async function giveRandomDrop(message) {
     return;
   }
 
-  DatabaseResources.insertRandomDrop(user.id, getMessageLink(message), drop.chance);
+  await DatabaseResources.insertRandomDrop(user.id, drop.id, message.url);
 
   message.react(drop.emoji);
-}
-
-function getMessageLink(message) {
-  return `https://discord.com/channels/${message.guild.id}/${message.channel.id}/${message.id}`;
 }
 
 module.exports = {

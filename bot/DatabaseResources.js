@@ -12,6 +12,7 @@ const NICKNAME_TABLE = 'user_nickname';
 const AVAILABILITY_TABLE = 'user_availability';
 const WEATHER_TABLE = 'weather';
 const RANDOM_DROP_TABLE = 'random_drop';
+const RANDOM_DROP_TYPE_TABLE = 'random_drop_type';
 
 async function getLuldollars() {
   return await wrapTransaction(async (db) => {
@@ -148,9 +149,9 @@ async function getWeatherDataForDiscordUser(discordUserId) {
   });
 }
 
-async function insertRandomDrop(userId, messageLink, drop) {
+async function insertRandomDrop(userId, randomDropTypeId, messageLink) {
   return await wrapTransaction(async (db) => {
-    return await db.query(`INSERT INTO ${RANDOM_DROP_TABLE} (user_id, discord_message_link, \`drop\`) VALUES (${db.escape(userId)}, ${db.escape(messageLink)}, ${db.escape(drop)})`);
+    return await db.query(`INSERT INTO ${RANDOM_DROP_TABLE} (user_id, random_drop_type_id, discord_message_link) VALUES (${db.escape(userId)}, ${db.escape(randomDropTypeId)}, ${db.escape(messageLink)})`);
   });
 }
 
@@ -162,7 +163,25 @@ async function getDropsForUser(userId) {
 
 async function getUserByDiscordId(discordUserId) {
   return await wrapTransaction(async (db) => {
-    return await db.query(`SELECT * FROM user WHERE d_user_id = ${db.escape(discordUserId)}`).then(user => user.shift());
+    return await db.query(`SELECT * FROM ${USER_TABLE} WHERE d_user_id = ${db.escape(discordUserId)}`).then(user => user.shift());
+  });
+}
+
+async function getRandomDropTypes() {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT * FROM ${RANDOM_DROP_TYPE_TABLE} ORDER BY chance DESC`);
+  });
+}
+
+async function getRandomDrops() {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT ${USER_TABLE}.name, ${USER_TABLE}.id AS \`user_id\`, emoji, COUNT(*) AS \`amount\` FROM ${RANDOM_DROP_TABLE} INNER JOIN ${USER_TABLE} ON ${USER_TABLE}.id = ${RANDOM_DROP_TABLE}.user_id INNER JOIN ${RANDOM_DROP_TYPE_TABLE} ON ${RANDOM_DROP_TYPE_TABLE}.id = ${RANDOM_DROP_TABLE}.random_drop_type_id GROUP BY ${USER_TABLE}.id, emoji ORDER BY chance DESC, ${USER_TABLE}.name, COUNT(emoji) DESC`);
+  });
+}
+
+async function getUsersWithDrops() {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT * FROM ${USER_TABLE} WHERE id IN (SELECT user_id FROM ${RANDOM_DROP_TABLE})`);
   });
 }
 
@@ -208,5 +227,8 @@ module.exports = {
   getWeatherDataForDiscordUser,
   insertRandomDrop,
   getDropsForUser,
-  getUserByDiscordId
+  getUserByDiscordId,
+  getRandomDropTypes,
+  getRandomDrops,
+  getUsersWithDrops
 };
