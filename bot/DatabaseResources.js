@@ -13,6 +13,7 @@ const AVAILABILITY_TABLE = 'user_availability';
 const WEATHER_TABLE = 'weather';
 const RANDOM_DROP_TABLE = 'random_drop';
 const RANDOM_DROP_TYPE_TABLE = 'random_drop_type';
+const BIRTHDAY_TABLE = 'birthday';
 
 async function getLuldollars() {
   return await wrapTransaction(async (db) => {
@@ -185,6 +186,12 @@ async function getUsersWithDrops() {
   });
 }
 
+async function getBirthdays() {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT * FROM ${BIRTHDAY_TABLE}`);
+  });
+}
+
 async function wrapTransaction(callback) {
   const db = await mysql.createConnection(dbConnection);
 
@@ -230,5 +237,6 @@ module.exports = {
   getUserByDiscordId,
   getRandomDropTypes,
   getRandomDrops,
-  getUsersWithDrops
+  getUsersWithDrops,
+  getBirthdays
 };
