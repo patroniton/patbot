@@ -14,6 +14,7 @@ const WEATHER_TABLE = 'weather';
 const RANDOM_DROP_TABLE = 'random_drop';
 const RANDOM_DROP_TYPE_TABLE = 'random_drop_type';
 const BIRTHDAY_TABLE = 'birthday';
+const SKYPE_TABLE = 'skype_messages';
 
 async function getLuldollars() {
   return await wrapTransaction(async (db) => {
@@ -192,6 +193,18 @@ async function getBirthdays() {
   });
 }
 
+async function getRandomSkypeMessage() {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT * FROM ${SKYPE_TABLE} AS s1 JOIN (SELECT CEIL(RAND() * (SELECT MAX(id) FROM ${SKYPE_TABLE})) AS id) AS s2 WHERE s1.id >= s2.id ORDER BY s1.id ASC LIMIT 1`).then(message => message.shift());
+  });
+}
+
+async function getSkypeMessageContext(skypeMessageId, range = 5) {
+  return await wrapTransaction(async (db) => {
+    return await db.query(`SELECT * FROM ${SKYPE_TABLE} WHERE id >= ${parseInt(skypeMessageId) - range} AND id <= ${parseInt(skypeMessageId) + range} AND convo_id = (SELECT convo_id FROM ${SKYPE_TABLE} WHERE id = ${skypeMessageId})`);
+  });
+}
+
 async function wrapTransaction(callback) {
   const db = await mysql.createConnection(dbConnection);
 
@@ -238,5 +251,7 @@ module.exports = {
   getRandomDropTypes,
   getRandomDrops,
   getUsersWithDrops,
-  getBirthdays
+  getBirthdays,
+  getRandomSkypeMessage,
+  getSkypeMessageContext
 };
