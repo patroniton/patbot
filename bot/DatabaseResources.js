@@ -201,7 +201,7 @@ async function getRandomSkypeMessage() {
 
 async function getSkypeMessageContext(skypeMessageId, range = 5) {
   return await wrapTransaction(async (db) => {
-    return await db.query(`SELECT * FROM ${SKYPE_TABLE} WHERE id >= ${parseInt(skypeMessageId) - range} AND id <= ${parseInt(skypeMessageId) + range} AND convo_id = (SELECT convo_id FROM ${SKYPE_TABLE} WHERE id = ${skypeMessageId})`);
+    return await db.query(`SELECT * FROM ${SKYPE_TABLE} WHERE id >= ${db.escape(parseInt(skypeMessageId) - range)} AND id <= ${db.escape(parseInt(skypeMessageId) + range)} AND convo_id = (SELECT convo_id FROM ${SKYPE_TABLE} WHERE id = ${skypeMessageId})`);
   });
 }
 
